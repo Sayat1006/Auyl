@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="kk"><head><meta charset="utf-8"><title>МИС ауылы — видео</title>
+<style>
+@font-face{font-family:N;font-weight:500;src:url(../assets/fonts/noto-sans-cyrillic-500-normal.woff2)}
+@font-face{font-family:N;font-weight:500;src:url(../assets/fonts/noto-sans-cyrillic-ext-500-normal.woff2);unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F}
+@font-face{font-family:N;font-weight:500;src:url(../assets/fonts/noto-sans-latin-500-normal.woff2);unicode-range:U+0000-00FF,U+2000-206F,U+2190-21FF}
+@font-face{font-family:N;font-weight:700;src:url(../assets/fonts/noto-sans-cyrillic-700-normal.woff2)}
+@font-face{font-family:N;font-weight:700;src:url(../assets/fonts/noto-sans-cyrillic-ext-700-normal.woff2);unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F}
+@font-face{font-family:N;font-weight:700;src:url(../assets/fonts/noto-sans-latin-700-normal.woff2);unicode-range:U+0000-00FF,U+2000-206F,U+2190-21FF}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:N,sans-serif;background:#222}
+#scene{position:absolute;inset:0}
+svg{position:absolute;inset:0;width:1080px;height:1920px}
+.head{position:absolute;left:0;right:0;top:200px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.hl{font-weight:700;line-height:1.02;letter-spacing:-2px;text-transform:uppercase;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:12px;padding:12px 28px;border-radius:999px;font-weight:700;font-size:40px;white-space:nowrap}
+#sub{position:absolute;left:48px;right:48px;bottom:64px;padding:24px 34px;border-radius:26px;background:rgba(18,18,24,.82);color:#fff;font-size:46px;font-weight:700;line-height:1.3;text-align:center}
+#sub span{transition:none}
+#tag{position:absolute;left:330px;top:1545px;display:flex;align-items:center;gap:12px;font-weight:700;font-size:34px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.6)}
+</style></head>
+<body><div id="stage"><div id="scene"></div><svg id="av" viewBox="0 0 1080 1920"></svg><div id="tag"></div><div id="sub"></div></div>
+<script>
+const W=1080,H=1920;
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const P=(t,a,b)=>cl((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3);
+const eb=x=>{x=cl(x);const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const pop=(t,a,d=.38)=>{const p=P(t,a,a+d);return `opacity:${cl(p*3)};transform:scale(${(.4+.6*eb(p)).toFixed(3)})`};
+const g=(x,y,s,c,r=0)=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${r.toFixed(2)}) scale(${s.toFixed(3)})">${c}</g>`;
+const gp=(t,a,x,y,c,d=.4)=>{const p=P(t,a,a+d);return p<=0?'':`<g opacity="${cl(p*3)}">${g(x,y,.3+.7*eb(p),c)}</g>`};
+const SH='text-shadow:0 6px 0 rgba(0,0,0,.28),0 0 24px rgba(0,0,0,.25)';
+// headline line: [text,size,color,at,extraStyle]
+const head=(t,lines,top=200)=>`<div class="head" style="top:${top}px">${lines.map(([s,z,c,a,x=''])=>`<div class="hl" style="font-size:${z}px;color:${c};${SH};${pop(t,a)};${x}">${s}</div>`).join('')}</div>`;
+const chipH=(t,a,txt,bg,fg,x,y,extra='')=>`<div style="position:absolute;left:0;right:0;top:${y}px;display:flex;justify-content:${x}"><div class="chip" style="background:${bg};color:${fg};box-shadow:0 8px 20px rgba(0,0,0,.25);${pop(t,a)};${extra}">${txt}</div></div>`;
+
+// ---------- reusable drawings ----------
+const house=(c,roof='#8d3b2f')=>`<rect x="-62" y="-90" width="124" height="90" fill="${c}" stroke="#2b2b2b" stroke-width="4"/><path d="M-78 -88 L0 -150 L78 -88Z" fill="${roof}" stroke="#2b2b2b" stroke-width="4" stroke-linejoin="round"/><rect x="-44" y="-68" width="34" height="30" fill="#ffe9a8" stroke="#2b2b2b" stroke-width="3"/><rect x="12" y="-56" width="30" height="56" fill="#6d4c41" stroke="#2b2b2b" stroke-width="3"/>`;
+const tree=(c='#4caf50')=>`<rect x="-7" y="-60" width="14" height="60" fill="#6d4c41"/><ellipse cx="0" cy="-110" rx="34" ry="62" fill="${c}" stroke="#2e5d32" stroke-width="3"/>`;
+const wheel=(r,rot,col='#212121')=>`<g transform="rotate(${rot})"><circle r="${r}" fill="${col}"/><circle r="${r*.45}" fill="#9e9e9e"/><rect x="${-r*.08}" y="${-r*.42}" width="${r*.16}" height="${r*.84}" fill="#616161"/><rect y="${-r*.08}" x="${-r*.42}" height="${r*.16}" width="${r*.84}" fill="#616161"/></g>`;
+const combine=t=>`<rect x="-170" y="-210" width="290" height="140" rx="16" fill="#d84315" stroke="#3e1a10" stroke-width="5"/>
+<rect x="-150" y="-260" width="120" height="55" rx="8" fill="#ef6c00" stroke="#3e1a10" stroke-width="5"/>
+<rect x="20" y="-320" width="100" height="112" rx="10" fill="#90caf9" stroke="#3e1a10" stroke-width="6"/>
+<rect x="-185" y="-300" width="18" height="90" fill="#555"/>
+<rect x="120" y="-110" width="120" height="40" fill="#fbc02d" stroke="#3e1a10" stroke-width="5"/>
+${g(200,-130,1,`<g transform="rotate(${t*300})"><circle r="48" fill="none" stroke="#f9a825" stroke-width="7"/>${[0,60,120].map(a=>`<line x1="-48" y1="0" x2="48" y2="0" stroke="#f9a825" stroke-width="7" transform="rotate(${a})"/>`).join('')}</g>`)}
+${g(-90,-62,1,wheel(62,t*400))}${g(80,-40,1,wheel(40,t*600))}`;
+const tractor=(t,col)=>`<rect x="-120" y="-150" width="200" height="80" rx="12" fill="${col}" stroke="#1b1b1b" stroke-width="5"/>
+<rect x="-110" y="-250" width="90" height="105" rx="8" fill="#b3e5fc" stroke="#1b1b1b" stroke-width="6"/>
+<rect x="40" y="-200" width="14" height="55" fill="#444"/>
+${g(-70,-60,1,wheel(60,t*400))}${g(60,-36,1,wheel(36,t*640))}`;
+const seeder=t=>`${tractor(t,'#2e7d32')}<rect x="-330" y="-130" width="190" height="80" rx="8" fill="#9e9e9e" stroke="#1b1b1b" stroke-width="5"/><line x1="-140" y1="-80" x2="-120" y2="-80" stroke="#1b1b1b" stroke-width="8"/>${[-300,-250,-200,-160].map(x=>g(x,-30,1,wheel(22,t*700,'#424242'))).join('')}
+${[0,1,2,3,4,5].map(i=>{const k=(t*3+i/6)%1;return `<circle cx="${-250-k*120}" cy="${-20+k*30}" r="7" fill="#fff59d" opacity="${1-k}"/>`}).join('')}`;
+const sprinkler=t=>`${tractor(t,'#ef6c00')}<rect x="-370" y="-170" width="230" height="110" rx="50" fill="#1e88e5" stroke="#0d2a4a" stroke-width="5"/><line x1="-140" y1="-90" x2="-120" y2="-90" stroke="#1b1b1b" stroke-width="8"/>${g(-255,-40,1,wheel(40,t*520))}
+${[0,1,2,3,4,5,6,7,8,9].map(i=>{const k=(t*2.2+i/10)%1;const a=(i%5)/4;return `<circle cx="${-370-k*(140+a*120)}" cy="${-150-Math.sin(k*Math.PI)*(90+a*60)+k*120}" r="9" fill="#64b5f6" opacity="${1-k*.7}"/>`}).join('')}`;
+const person=(c,hel='#fbc02d')=>`<path d="M-42 0 Q-46 -80 0 -88 Q46 -80 42 0Z" fill="${c}" stroke="#1e2430" stroke-width="4"/><circle cy="-112" r="30" fill="#f1c27d" stroke="#1e2430" stroke-width="4"/><path d="M-34 -118 Q0 -168 34 -118Z" fill="${hel}" stroke="#1e2430" stroke-width="4"/><rect x="-40" y="-122" width="80" height="9" rx="4" fill="${hel}" stroke="#1e2430" stroke-width="3"/><circle cx="-10" cy="-106" r="3.5" fill="#1e2430"/><circle cx="10" cy="-106" r="3.5" fill="#1e2430"/><path d="M-8 -94 Q0 -88 8 -94" stroke="#1e2430" stroke-width="3" fill="none"/>`;
+
+// ---------- scenes ----------
+const S={};
+S.hook=(t,D)=>{
+  const tw=-160+t*430, ty=1222-Math.abs(Math.sin(t*5))*45;
+  return {bg:'linear-gradient(#1d2236 0%,#4b3a55 38%,#c47a5a 62%,#e9a765 65%)',
+  svg:`<circle cx="760" cy="1250" r="170" fill="#ffcf70" opacity=".9"/>
+  <rect y="1248" width="1080" height="672" fill="#c9a46a"/><rect y="1248" width="1080" height="22" fill="#b08a52"/>
+  ${[0,1,2,3,4].map(i=>{const x=((t*700+i*260)%1500)-300;return `<line x1="${x}" y1="${1060+i*40}" x2="${x+150}" y2="${1060+i*40}" stroke="#fff" stroke-opacity=".35" stroke-width="5" stroke-linecap="round"/>`}).join('')}
+  ${g(tw,ty,1,`<g transform="rotate(${t*320})"><circle r="52" fill="none" stroke="#7a5a2e" stroke-width="6"/><path d="M-40 -20 Q0 50 40 -25 M-30 30 Q10 -50 45 20 M-50 5 Q0 -10 50 5" stroke="#7a5a2e" stroke-width="5" fill="none"/></g>`)}
+  ${[0,1,2,3,4,5,6,7,8,9,10,11].map(i=>`<circle cx="${(i*97)%1080}" cy="${80+(i*173)%500}" r="${2+i%3}" fill="#fff" opacity=".7"/>`).join('')}`,
+  html:head(t,[['Бір станциядан',96,'#fff',.05],['ауыл туа ма?',132,'#ffd166',.7]],300)};
+};
+S.rice=(t,D)=>{
+  let pl='';
+  for(let r=0;r<4;r++)for(let c=0;c<9;c++){const x=70+c*120+(r%2)*40,y=1290+r*55;const h=95*eo(P(t,.2+c*.06+r*.12,.9+c*.06+r*.12));const sw=Math.sin(t*2.5+c*.7)*6;
+    if(h>1)pl+=`<path d="M${x} ${y} Q${x+sw/2} ${y-h/2} ${x+sw} ${y-h}" stroke="#558b2f" stroke-width="6" fill="none"/><path d="M${x} ${y} Q${x-14} ${y-h*.5} ${x-24+sw} ${y-h*.75}" stroke="#7cb342" stroke-width="5" fill="none"/><ellipse cx="${x+sw+8}" cy="${y-h+8}" rx="8" ry="16" fill="#e6c94c" transform="rotate(25 ${x+sw+8} ${y-h+8})"/>`}
+  const pinP=P(t,1.1,1.6),py=880-(1-eo(pinP))*500;
+  return {bg:'linear-gradient(#9fd3ec 0%,#d9f0f8 55%)',
+  svg:`<path d="M0 1080 Q270 980 540 1060 T1080 1040 V1300 H0Z" fill="#a5d6a7"/><rect y="1180" width="1080" height="740" fill="#8bc34a"/>
+  <path d="M-20 1170 C200 1120 380 1230 600 1170 S900 1120 1100 1190 L1100 1230 C900 1170 640 1270 600 1215 S240 1170 -20 1215Z" fill="#4fc3f7" stroke="#0288d1" stroke-width="4"/>
+  ${pl}
+  ${pinP>0?g(540,py,1,`<path d="M0 0 C-60 -70 -70 -110 -70 -140 A70 70 0 1 1 70 -140 C70 -110 60 -70 0 0Z" fill="#e53935" stroke="#7f1d1d" stroke-width="5"/><circle cy="-140" r="26" fill="#fff"/>`):''}`,
+  html:head(t,[['Күріш',150,'#2e7d32',.1,'text-shadow:0 6px 0 #fff'],['өлкесі',110,'#1e2430',.45,'text-shadow:0 5px 0 #fff']],230)
+   +chipH(t,1.5,'📍 Қызылорда','#fff','#c62828','center',920,'font-size:46px')
+   +chipH(t,.9,'1950–60 жж.','#1e2430','#fff','center',570)};
+};
+S.y1958=(t,D)=>{
+  const yr=Math.round(1900+58*eo(P(t,.1,1.4)));
+  const pp=eo(P(t,.15,.75)), sp=P(t,1.5,1.85);
+  let lines='';for(let i=0;i<9;i++)lines+=`<rect x="-220" y="${-200+i*48}" width="${i%3==2?300:440}" height="14" rx="7" fill="#c8bba0"/>`;
+  return {bg:'linear-gradient(#2b2420,#3e3129)',
+  svg:`${g(540,1020+(1-pp)*900,1,`<g transform="rotate(-4)"><rect x="-290" y="-360" width="580" height="700" fill="#f6edd7" stroke="#b9a983" stroke-width="4"/><text x="0" y="-270" text-anchor="middle" font-family="N" font-weight="700" font-size="44" fill="#4a3f30">ҚАУЛЫ · ПОСТАНОВЛЕНИЕ</text>${lines}</g>`)}
+  ${sp>0?g(700,1260,2.2-1.2*eo(sp),`<g transform="rotate(-12)" opacity="${cl(sp*2)}"><rect x="-140" y="-65" width="280" height="130" rx="18" fill="none" stroke="#c62828" stroke-width="12"/><text y="34" text-anchor="middle" font-family="N" font-weight="700" font-size="96" fill="#c62828">1958</text></g>`):''}`,
+  html:head(t,[[String(yr),220,'#f2e3c6',0]],170)+chipH(t,2.4,'⚙️ Машина сынау станциясы','#2e7d32','#fff','center',540,'font-size:44px')};
+};
+S.test=(t,D)=>{
+  const veh=[[combine,.0,'КОМБАЙН','#d84315'],[seeder,1.6,'СЕЯЛКА','#2e7d32'],[sprinkler,3.1,'СУАРУ МАШИНАСЫ','#1e88e5']];
+  let v='',lab='';
+  veh.forEach(([fn,a,name,c])=>{const k=P(t,a,a+2.6);if(k<=0||k>=1)return;const x=-450+k*1980;const bob=Math.sin(t*18)*3;
+    v+=g(x,1235+bob,1,fn(t));
+    lab+=`<div style="position:absolute;left:${x-170}px;top:820px;width:340px;display:flex;justify-content:center"><div class="chip" style="background:${c};color:#fff;font-size:38px">${name}</div></div>`;});
+  const ok=P(t,2.2,2.6);
+  return {bg:'linear-gradient(#bfe3f5 0%,#e3f3fb 50%)',
+  svg:`<rect y="1120" width="1080" height="800" fill="#9ccc65"/>${[0,1,2,3].map(i=>`<rect y="${1300+i*60}" width="1080" height="20" fill="#8bc34a"/>`).join('')}
+  <rect y="1228" width="1080" height="40" fill="#a1887f"/>${v}`,
+  html:head(t,[['Сынақ',160,'#1e2430',.1,'text-shadow:0 6px 0 #fff']],240)
+   +(ok>0?`<div style="position:absolute;left:860px;top:120px;width:130px;height:130px;border-radius:50%;background:#43a047;color:#fff;font-size:96px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 0 #1b5e20;${pop(t,2.2)}">✓</div>`:'')
+   +chipH(t,.6,'алдымен — осында','#2f5d8c','#fff','center',460)+lab};
+};
+S.staff=(t,D)=>{
+  const a=2.5, n=Math.round(100*eo(P(t,a,a+2.2)));
+  let ppl='';const cols=['#1565c0','#00897b','#5d4037','#1565c0','#00897b','#6a1b9a'];
+  for(let r=0;r<3;r++)for(let c=0;c<6;c++){const i=r*6+c;const x=170+c*148+(r%2)*40,y=1010+r*150;if(r==2&&c<2)continue;ppl+=gp(t,a+.1+i*.07,x,y,person(cols[(i*5)%6]),.35)}
+  const bld=`<rect x="-400" y="-260" width="800" height="260" fill="#eceff1" stroke="#37474f" stroke-width="6"/><rect x="-80" y="-340" width="160" height="80" fill="#2f5d8c" stroke="#37474f" stroke-width="6"/><text y="-282" text-anchor="middle" font-family="N" font-weight="700" font-size="54" fill="#fff">МИС</text>${[0,1,2,3,4,5,6,7].map(i=>`<rect x="${-370+i*96}" y="-220" width="60" height="70" fill="#90caf9" stroke="#37474f" stroke-width="4"/><rect x="${-370+i*96}" y="-120" width="60" height="70" fill="#90caf9" stroke="#37474f" stroke-width="4"/>`).join('')}`;
+  return {bg:'linear-gradient(#f6f2eb,#e8e0cf)',
+  svg:`<rect y="880" width="1080" height="1040" fill="#d7ccb6"/>${t<a+.5?`<g opacity="${1-P(t,a,a+.4)}">${g(540,880+eo(P(t,a,a+.5))*300,1,bld)}</g>`:''}${ppl}`,
+  html:head(t,[['Республикада',84,'#1e2430',.05,'text-shadow:0 5px 0 #fff'],['бірден-бір',120,'#2f5d8c',.5,'text-shadow:0 5px 0 #fff']],200)
+   +(t>a?`<div class="head" style="top:520px"><div class="hl" style="font-size:180px;color:#d84315;text-shadow:0 7px 0 #fff;${pop(t,a)}">${n}+</div><div class="hl" style="font-size:58px;color:#1e2430;${pop(t,a+.3)}">инженер мен маман</div></div>`:'')};
+};
+S.school=(t,D)=>{
+  const dp=(a,b)=>(1-P(t,a,b)).toFixed(3);
+  const chalk=`stroke="#f5f5f0" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1"`;
+  return {bg:'#4e342e',
+  svg:`<rect x="60" y="560" width="960" height="760" rx="14" fill="#2f4a3a" stroke="#8d6e63" stroke-width="26"/>
+  <path d="M260 1120 h330 v-120 h-150 v-60 h-160Z" ${chalk} stroke-dashoffset="${dp(.2,1.0)}"/>
+  <path d="M590 1060 h120 v40 h-120" ${chalk} stroke-dashoffset="${dp(.8,1.2)}"/>
+  <circle cx="340" cy="1140" r="56" ${chalk} stroke-dashoffset="${dp(1.0,1.4)}"/><circle cx="530" cy="1150" r="38" ${chalk} stroke-dashoffset="${dp(1.1,1.5)}"/>
+  <path d="M120 1240 h840" ${chalk} stroke-dashoffset="${dp(1.3,1.9)}"/>
+  ${gp(t,2.3,800,800,`<g transform="rotate(${Math.sin(t*3)*6})"><path d="M-110 0 L0 -50 L110 0 L0 50Z" fill="#212121" stroke="#000" stroke-width="4"/><path d="M-60 25 v50 q60 30 120 0 v-50" fill="#212121"/><line x1="90" y1="8" x2="90" y2="90" stroke="#fbc02d" stroke-width="7"/><circle cx="90" cy="96" r="12" fill="#fbc02d"/></g>`)}
+  ${gp(t,2.6,820,1050,`<rect x="-120" y="-70" width="240" height="140" rx="10" fill="#fff8e1" stroke="#a1887f" stroke-width="5"/><line x1="-80" y1="-30" x2="80" y2="-30" stroke="#bcaaa4" stroke-width="8"/><line x1="-80" y1="0" x2="60" y2="0" stroke="#bcaaa4" stroke-width="8"/><circle cx="70" cy="40" r="22" fill="#e53935"/>`)}`,
+  html:head(t,[['Комбайнерлер',104,'#fff',.05],['мектебі',120,'#ffd166',.4]],230)
+   +chipH(t,2.5,'🎓 Ғылыми диссертациялар','#fff','#2f4a3a','center',610)};
+};
+S.mis=(t,D)=>{
+  const L=['М','И','С'].map((c,i)=>{const p=P(t,.25+i*.22,.65+i*.22);return p<=0?'':`<text x="${[-150,8,145][i]}" y="${55-(1-eb(p))*-0}" text-anchor="middle" font-family="N" font-weight="700" font-size="170" fill="#fff" opacity="${cl(p*3)}" transform="translate(0 ${(-(1-eo(p))*260).toFixed(1)})">${c}</text>`}).join('');
+  return {bg:'linear-gradient(#ffcc80 0%,#ffe9c7 55%)',
+  svg:`<rect y="1040" width="1080" height="880" fill="#c5a96b"/><path d="M500 1040 L580 1040 L900 1920 L180 1920Z" fill="#6d6d6d"/>
+  ${[0,1,2,3].map(i=>{const k=((t*.6+i/4)%1);const y=1040+k*k*880,w=6+k*30;return `<rect x="${540-w/2}" y="${y}" width="${w}" height="${10+k*70}" fill="#fff" opacity=".85"/>`}).join('')}
+  ${g(150,1080,1.3,tree('#689f38'))}${g(950,1080,1.3,tree('#689f38'))}${g(60,1100,1,tree('#7cb342'))}${g(1030,1110,1,tree('#7cb342'))}
+  <rect x="268" y="900" width="22" height="300" fill="#455a64"/><rect x="790" y="900" width="22" height="300" fill="#455a64"/>
+  ${g(540,860,1,`<rect x="-310" y="-130" width="620" height="240" rx="18" fill="#2f5d8c" stroke="#fff" stroke-width="10"/>${L}`)}`,
+  html:head(t,[['Ел атаған',96,'#1e2430',.05,'text-shadow:0 5px 0 #fff'],['атау',130,'#2f5d8c',.35,'text-shadow:0 5px 0 #fff']],230)};
+};
+const village=(t,rows,color,a0,per)=>{let s='';rows.forEach((y,r)=>{s+=`<rect x="0" y="${y+4}" width="1080" height="44" fill="${color?'#8d8d8d':'#a68f6a'}"/>`;for(let c=0;c<6;c++){const i=r*6+c;const x=110+c*172;const cs=color?['#ffcc80','#90caf9','#ef9a9a','#a5d6a7','#fff59d','#ce93d8'][i%6]:'#d8c39c';s+=gp(t,a0+i*per,x,y,house(cs,color?['#c62828','#1565c0','#6d4c41'][i%3]:'#8a6d4b'),.3);if(color&&c<5)s+=gp(t,a0+i*per+.15,x+86,y,g(0,0,.6,tree()),.3)}});return s};
+S.street=(t,D)=>{
+  let s='<rect x="0" y="1154" width="1080" height="54" fill="#a68f6a"/>';[200,430,660,890].forEach((x,i)=>s+=gp(t,.3+i*.15,x,1150,house('#d8c39c','#8a6d4b'),.3));
+  return {bg:'radial-gradient(circle at 50% 50%,#efe2c2 40%,#c9b48a 100%)',
+  svg:`<rect y="1150" width="1080" height="770" fill="#cdb889"/>${s}`,
+  html:head(t,[['1',260,'#6d4c41',.05,'text-shadow:0 7px 0 #fff8e1'],['көше',120,'#3e2723',.3,'text-shadow:0 5px 0 #fff8e1']],260)};
+};
+S.today=(t,D)=>{
+  const cnt=(a,to)=>Math.round(to*eo(P(t,a,a+1.1)));
+  return {bg:'linear-gradient(#81d4fa 0%,#e1f5fe 45%)',
+  svg:`<rect y="860" width="1080" height="1060" fill="#aed581"/>${village(t,[930,1110,1290],1,.2,.07)}
+  ${[0,1,2,3,4,5].map(i=>gp(t,.6+i*.1,80+i*190,880,`<rect x="-4" y="-120" width="8" height="120" fill="#455a64"/><circle cy="-124" r="14" fill="#fff59d" stroke="#455a64" stroke-width="4"/>`)).join('')}`,
+  html:`<div class="head" style="top:190px;gap:16px">
+   <div class="hl" style="font-size:96px;color:#1e2430;text-shadow:0 5px 0 #fff;${pop(t,.25)}"><span style="color:#d84315">${cnt(.25,20)}+</span> көше</div>
+   <div class="hl" style="font-size:96px;color:#1e2430;text-shadow:0 5px 0 #fff;${pop(t,1.5)}"><span style="color:#2f5d8c">${cnt(1.5,150)}+</span> үй</div>
+   <div class="hl" style="font-size:96px;color:#1e2430;text-shadow:0 5px 0 #fff;${pop(t,2.9)}"><span style="color:#2e7d32">~${cnt(2.9,1500)}</span> тұрғын</div></div>`};
+};
+S.batyr=(t,D)=>{
+  const r=eo(P(t,.1,1.1)), fl=t*4;
+  let flag=`M0 0`;for(let i=0;i<=10;i++)flag+=` L${i*24} ${Math.sin(fl+i*.6)*10}`;for(let i=10;i>=0;i--)flag+=` L${i*24} ${110+Math.sin(fl+i*.6)*10}`;
+  const war=`<path d="M-150 0 Q-170 -250 -90 -300 L90 -300 Q170 -250 150 0Z"/><rect x="-36" y="-340" width="72" height="50"/><circle cy="-380" r="62"/>
+  <path d="M-72 -400 Q0 -520 72 -400Z"/><path d="M0 -500 L-8 -560 L8 -560Z"/><path d="M4 -556 Q60 -600 40 -520" stroke="#1b1016" stroke-width="12" fill="none"/>
+  <path d="M-62 -390 Q-80 -330 -70 -300 L-50 -380Z"/><path d="M62 -390 Q80 -330 70 -300 L50 -380Z"/>
+  <path d="M90 -280 L200 -200 L190 -170 L80 -230Z"/><rect x="186" y="-700" width="14" height="760"/><path d="M186 -700 L193 -770 L200 -700Z"/>
+  <circle cx="-150" cy="-170" r="80"/>`;
+  return {bg:'linear-gradient(#2b1630 0%,#8e2f3a 40%,#e76f51 62%,#f4a261 72%)',
+  svg:`<circle cx="540" cy="1080" r="300" fill="#ffd166"/><circle cx="540" cy="1080" r="380" fill="#ffd166" opacity=".18"/>
+  ${g(520,1330+(1-r)*700,1,`<g fill="#1b1016">${war}</g>${g(200,-690,1,`<path d="${flag}Z" fill="#c62828" stroke="#1b1016" stroke-width="5"/>`)}`)}
+  <path d="M0 1260 Q300 1200 540 1250 T1080 1230 V1920 H0Z" fill="#1b1016"/>`,
+  html:chipH(t,.15,'2017 жылдан','#ffd166','#2b1630','center',190,'font-size:46px')
+   +head(t,[['Баймұрат',134,'#ffd166',1.6],['батыр',120,'#fff',1.9]],300)
+   +chipH(t,2.8,'⚔️ Аңырақай шайқасы, 1729','rgba(255,255,255,.95)','#8e2f3a','center',600)};
+};
+S.cta=(t,D)=>{
+  const dots=[0,1,2].map(i=>`<circle cx="${-60+i*60}" cy="0" r="18" fill="#2f5d8c" opacity="${.35+.65*Math.max(0,Math.sin(t*6-i*.9))}"/>`).join('');
+  const hearts=[0,1,2,3,4,5].map(i=>{const k=((t*.45+i/6)%1);return `<text x="${700+(i%3)*110+Math.sin(t*2+i)*20}" y="${1300-k*600}" font-size="${50+i%2*20}" opacity="${t>1?(1-k):0}">${['❤️','💬','👍'][i%3]}</text>`}).join('');
+  return {bg:'linear-gradient(#2f5d8c,#4f86c0)',
+  svg:`${gp(t,.9,540,960,`<path d="M-230 -130 h460 a40 40 0 0 1 40 40 v170 a40 40 0 0 1 -40 40 h-300 l-70 70 l10 -70 h-100 a40 40 0 0 1 -40 -40 v-170 a40 40 0 0 1 40 -40Z" fill="#fff"/>${g(0,-5,1,dots)}`)}${hearts}`,
+  html:head(t,[['Сенің',120,'#fff',.05],['ауылың?',150,'#ffd166',.45]],260)
+   +chipH(t,2.4,'Түсініктемеге жаз 👇','#ffd166','#1e2430','center',1240,`font-size:50px;margin-top:${Math.abs(Math.sin(t*4))*-14}px`)};
+};
+
+// ---------- narrator avatar ----------
+function avatar(e,T){
+  const blink=((T%3.3)<.12)?.1:1, bob=Math.sin(T*2.2)*4-e*6;
+  const mh=4+e*30, mw=30+e*6;
+  const shape=`<path d="M-150 160 Q-150 70 -60 60 L60 60 Q150 70 150 160Z"/><rect x="-32" y="20" width="64" height="60"/><ellipse cx="0" cy="-60" rx="96" ry="112"/><ellipse cx="-96" cy="-50" rx="20" ry="28"/><ellipse cx="96" cy="-50" rx="20" ry="28"/>`;
+  return g(170,1530+bob,1,`<g fill="#fff" stroke="#fff" stroke-width="22" stroke-linejoin="round">${shape}</g>
+  <path d="M-150 160 Q-150 70 -60 60 L60 60 Q150 70 150 160Z" fill="#2f5d8c"/><path d="M-40 60 L0 110 L40 60Z" fill="#fff"/>
+  <rect x="-32" y="20" width="64" height="60" fill="#e0a96d"/>
+  <ellipse cx="-96" cy="-50" rx="20" ry="28" fill="#e9b47c"/><ellipse cx="96" cy="-50" rx="20" ry="28" fill="#e9b47c"/>
+  <ellipse cx="0" cy="-60" rx="96" ry="112" fill="#f1c27d"/>
+  <path d="M-100 -70 Q-110 -190 0 -178 Q105 -185 100 -70 Q90 -130 40 -140 Q-20 -112 -70 -140 Q-95 -120 -100 -70Z" fill="#1b1b1b"/>
+  <path d="M-60 -88 q22 -12 42 0 M18 -88 q22 -12 42 0" stroke="#1b1b1b" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <ellipse cx="-38" cy="-58" rx="11" ry="${13*blink}" fill="#1b1b1b"/><ellipse cx="38" cy="-58" rx="11" ry="${13*blink}" fill="#1b1b1b"/>
+  <path d="M-4 -40 q-10 30 4 34" stroke="#c98d55" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="-58" cy="-10" rx="16" ry="9" fill="#f08a7a" opacity=".45"/><ellipse cx="58" cy="-10" rx="16" ry="9" fill="#f08a7a" opacity=".45"/>
+  <ellipse cx="0" cy="${12+mh/2}" rx="${mw}" ry="${mh/2+2}" fill="#7a1f1f"/>${mh>10?`<rect x="${-mw*.6}" y="13" width="${mw*1.2}" height="7" rx="3" fill="#fff"/>`:''}`);
+}
+
+// ---------- subtitles ----------
+function words(sub){const out=[];let hl=false;sub.split(/(\*\*)/).forEach(p=>{if(p==='**'){hl=!hl;return}p.split(/(\s+)/).forEach(w=>{if(w)out.push({w,hl,sp:/^\s+$/.test(w)})})});return out}
+function subtitle(sc,lt){
+  const ws=words(sc.sub), tot=ws.filter(x=>!x.sp).reduce((a,x)=>a+x.w.length+2,0);
+  const prog=cl((lt-sc.aStart)/sc.aDur)*tot; let acc=0;
+  return ws.map(x=>{if(x.sp)return ' ';const on=acc<=prog;acc+=x.w.length+2;const c=x.hl?(on?'#ffd166':'rgba(255,209,102,.45)'):(on?'#fff':'rgba(255,255,255,.45)');return `<span style="color:${c}">${x.w}</span>`}).join('');
+}
+
+let TL=null;
+window.setup=tl=>{TL=tl;document.getElementById('tag').innerHTML='📍 Баймұрат батыр ауылы'};
+window.render=T=>{
+  const sc=TL.scenes.find(s=>T>=s.start&&T<s.start+s.dur)||TL.scenes[TL.scenes.length-1];
+  const lt=T-sc.start, r=S[sc.id](lt,sc.dur);
+  const k=eo(P(lt,0,.22));
+  const el=document.getElementById('scene');
+  el.style.background=r.bg; el.parentNode.style.background=r.bg; el.style.transform=`translateY(${(1-k)*60}px) scale(${.96+.04*k})`; el.style.opacity=.3+.7*k;
+  el.innerHTML=`<svg viewBox="0 0 1080 1920">${r.svg}</svg>${r.html||''}`;
+  const e=TL.env[Math.min(TL.env.length-1,Math.round(T*TL.fps))]||0;
+  document.getElementById('av').innerHTML=avatar(e,T);
+  document.getElementById('sub').innerHTML=subtitle(sc,lt);
+};
+</script></body></html>
