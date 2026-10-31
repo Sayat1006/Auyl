@@ -3,7 +3,12 @@ import json, wave, numpy as np
 FPS=30; SR=22050
 sc=json.load(open("scenes.json")); n=len(sc)
 def rd(f):
-    w=wave.open(f); a=np.frombuffer(w.readframes(w.getnframes()),dtype=np.int16).astype(np.float32)/32768; return a
+    w=wave.open(f); a=np.frombuffer(w.readframes(w.getnframes()),dtype=np.int16).astype(np.float32)/32768
+    # trim TTS head/tail breaths: keep from first to last 10 ms window above -38 dBFS, add short fades
+    win=SR//100; r=np.array([np.sqrt(np.mean(a[i:i+win]**2)) for i in range(0,len(a)-win,win)])
+    on=np.where(r>10**(-38/20))[0]; s0=max(0,on[0]*win-win); s1=min(len(a),(on[-1]+1)*win+4*win)
+    a=a[s0:s1].copy(); fi=int(.01*SR); fo=int(.08*SR)
+    a[:fi]*=np.linspace(0,1,fi); a[-fo:]*=np.linspace(1,0,fo)**2; return a
 LEAD=0.25; PAD=0.45
 t=0.0; scenes=[]; clips=[]
 for i,s in enumerate(sc):
@@ -27,12 +32,7 @@ sm=np.copy(env)
 for f in range(1,nf): sm[f]=max(env[f],sm[f-1]*0.55)
 # sfx: whoosh at each scene start
 rng=np.random.default_rng(7); sfx=np.zeros(N,np.float32)
-for s in scenes[1:]:
-    L=int(0.35*SR); x=rng.standard_normal(L).astype(np.float32)
-    # simple low-pass via moving average, rising then falling
-    x=np.convolve(x,np.ones(12)/12,mode="same")
-    e=np.sin(np.linspace(0,np.pi,L))**2
-    k=int(max(0,s["start"]-0.12)*SR); sfx[k:k+L]+=x*e*0.10
+# (transition whoosh removed: it sounded like sniffing)
 # soft pad (Am - F - C - G), slow attack, low volume
 tt=np.arange(N)/SR; pad=np.zeros(N,np.float32)
 chords=[[220,261.63,329.63],[174.61,220,261.63],[130.81,196,261.63],[196,246.94,293.66]]
