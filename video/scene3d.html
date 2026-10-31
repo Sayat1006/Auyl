@@ -15,7 +15,7 @@ canvas{position:absolute;inset:0;width:1080px;height:1920px}
 #tag{position:absolute;left:350px;top:1560px;font-weight:700;font-size:34px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7)}
 #vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.35) 100%)}
 </style></head>
-<body><div id="stage"><canvas id="c" width="1080" height="1920"></canvas><div id="vig"></div><div id="ov"></div><div id="tag">📍 Баймұрат батыр ауылы</div><div id="sub"></div></div>
+<body><div id="stage"><canvas id="c" width="1080" height="1920"></canvas><div id="vig"></div><div id="ov"></div><div id="tag">📍 Баймұрат батыр ауылы</div><div id="sub"></div><div id="wp" style="position:absolute;inset:0"></div></div>
 <script type="module">
 import * as THREE from './node_modules/three/build/three.module.js';
 const W=1080,H=1920;
@@ -26,10 +26,15 @@ const eo=x=>1-Math.pow(1-x,3);
 const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
 const eb=x=>{x=cl(x);const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
 const bounce=x=>{x=cl(x);const n=7.5625,d=2.75;if(x<1/d)return n*x*x;if(x<2/d)return n*(x-=1.5/d)*x+.75;if(x<2.5/d)return n*(x-=2.25/d)*x+.9375;return n*(x-=2.625/d)*x+.984375};
-const pop=(t,a,d=.38)=>{const p=P(t,a,a+d);return `opacity:${cl(p*3)};transform:scale(${(.4+.6*eb(p)).toFixed(3)})`};
+let D_=5,LAST_=false,T_=0,ACC_='#ffd166';
+const exitP=(t,o=0)=>LAST_?0:eio(P(t,D_-.42+o,D_-.12+o));
+const pop=(t,a,d=.38)=>{const p=P(t,a,a+d),q=exitP(t);return `opacity:${(cl(p*3)*(1-q)).toFixed(3)};transform:translateY(${(-q*70).toFixed(1)}px) scale(${(.4+.6*eb(p)).toFixed(3)})`};
+const kin=(s,t,a,st=.032)=>[...s].map((ch,i)=>{const p=P(t,a+i*st,a+i*st+.5),q=exitP(t,i*.012);const y=(1-eb(p))*115-q*120;return `<span style="display:inline-block;transform:translateY(${y.toFixed(1)}%) rotate(${((1-p)*10).toFixed(1)}deg)">${ch===' '?'&nbsp;':ch}</span>`}).join('');
 const SH='text-shadow:0 6px 0 rgba(0,0,0,.3),0 0 30px rgba(0,0,0,.35)';
-const head=(t,lines,top=200)=>`<div class="head" style="top:${top}px">${lines.map(([s,z,c,a,x=''])=>`<div class="hl" style="font-size:${z}px;color:${c};${SH};${pop(t,a)};${x}">${s}</div>`).join('')}</div>`;
-const chipH=(t,a,txt,bg,fg,y,extra='')=>`<div style="position:absolute;left:0;right:0;top:${y}px;display:flex;justify-content:center"><div class="chip" style="background:${bg};color:${fg};box-shadow:0 10px 24px rgba(0,0,0,.3);${pop(t,a)};${extra}">${txt}</div></div>`;
+const head=(t,lines,top=200)=>{const last=lines[lines.length-1];const ua=last[3]+.35,u=eo(P(t,ua,ua+.5)),uq=exitP(t);
+  return `<div class="head" style="top:${top}px">${lines.map(([s,z,c,a,x=''])=>`<div class="hl" style="font-size:${z}px;color:${c};${SH};${x};overflow:hidden;padding:4px 24px 16px;margin-bottom:-14px">${kin(s,t,a)}</div>`).join('')}
+  <div style="height:16px;width:300px;border-radius:8px;background:${ACC_};margin-top:6px;transform-origin:${uq>0?'right':'left'};transform:scaleX(${(u*(1-uq)).toFixed(3)});box-shadow:0 4px 0 rgba(0,0,0,.2)"></div></div>`};
+const chipH=(t,a,txt,bg,fg,y,extra='')=>{const p=eo(P(t,a,a+.45)),q=exitP(t,.05);if(p<=0)return '';return `<div style="position:absolute;left:0;right:0;top:${y}px;display:flex;justify-content:center;opacity:${1-q}"><div class="chip" style="background:${bg};color:${fg};box-shadow:0 10px 24px rgba(0,0,0,.3);clip-path:inset(-20px ${((1-p)*100).toFixed(1)}% -20px -20px round 999px);transform:translateX(${((1-p)*-40+q*80).toFixed(1)}px);${extra}">${txt}</div></div>`};
 const chipAt=(x,y,txt,bg,fg,style='')=>`<div style="position:absolute;left:${x-200}px;top:${y}px;width:400px;display:flex;justify-content:center"><div class="chip" style="background:${bg};color:${fg};font-size:38px;box-shadow:0 8px 20px rgba(0,0,0,.3);${style}">${txt}</div></div>`;
 
 // ---------- three setup ----------
@@ -252,7 +257,7 @@ scene('batyr',{
     this.w=w;g.add(w);for(let i=0;i<8;i++){const r=mesh(new THREE.DodecahedronGeometry(.4+rnd()*.6,0),M('#2b1a22'),(rnd()-.5)*16,0,-2-rnd()*8);g.add(r)}},
   update(t){const r=eo(P(t,.1,1.2));this.w.position.y=-5+r*5;const p=this.fg.attributes.position;for(let i=0;i<p.count;i++){const x=this.fbase[i*3];p.setZ(i,Math.sin(x*3.2-t*6)*.18*(x/1.8))}p.needsUpdate=true;this.fg.computeVertexNormals();
     const k=eio(P(t,0,6));
-    return {cam:[[3.2-k*5,1.0+k*.6,7.5-k*.5],[0,2.8,0]],html:chipH(t,.15,'2017 жылдан','#ffd166','#2b1630',190,'font-size:46px')+head(t,[['Баймұрат',134,'#ffd166',1.6],['батыр',120,'#fff',1.9]],300)+chipH(t,2.8,'⚔️ Аңырақай шайқасы, 1729','rgba(255,255,255,.95)','#8e2f3a',600)}}
+    return {cam:[[3.2-k*5,1.0+k*.6,7.5-k*.5],[0,2.8,0]],html:chipH(t,.15,'2017 жылдан','#ffd166','#2b1630',190,'font-size:46px')+head(t,[['Баймұрат',134,'#ffd166',1.6],['батыр',120,'#fff',1.9]],300)+timeline(t,2.8)}}
 });
 
 scene('cta',{
@@ -266,6 +271,20 @@ scene('cta',{
     return {cam:[[0,0,14],[0,.6,0]],html:head(t,[['Сенің',120,'#fff',.05],['ауылың?',150,'#ffd166',.45]],260)+chipH(t,2.4,'Түсініктемеге жаз 👇','#ffd166','#1e2430',1300,`font-size:50px;margin-top:${Math.abs(Math.sin(t*4))*-14}px`)}}
 });
 
+function timeline(t,a){const p=eio(P(t,a,a+1.0)),q=exitP(t);const x0=170,x1=910,y=830;const xe=x0+(x1-x0)*p;
+  const dot=(x,c,b)=>{const k=eb(P(t,b,b+.35));return `<circle cx="${x}" cy="${y}" r="${(22*k).toFixed(1)}" fill="${c}" stroke="#fff" stroke-width="6"/>`};
+  const lab=(x,yy,txt,sz,b,c='#fff')=>{const k=eo(P(t,b,b+.4));return `<text x="${x}" y="${yy+(1-k)*20}" text-anchor="middle" font-family="N" font-weight="700" font-size="${sz}" fill="${c}" opacity="${k}">${txt}</text>`};
+  return `<svg style="position:absolute;inset:0;opacity:${1-q}" viewBox="0 0 1080 1920"><line x1="${x0}" y1="${y}" x2="${xe}" y2="${y}" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 18"/>
+  ${dot(x0,'#c62828',a)}${p>.97?dot(x1,'#ffd166',a+.95):''}${lab(x0,y-50,'1729',56,a+.1)}${lab(x0,y+75,'Аңырақай',38,a+.25,'#ffd166')}${lab(x1,y-50,'2017',56,a+1.0)}${lab(x1,y+75,'ауыл атауы',38,a+1.15,'#ffd166')}</svg>`}
+const ACC={hook:'#ffd166',rice:'#43a047',y1958:'#e64a19',test:'#2f5d8c',staff:'#e64a19',school:'#ffd166',mis:'#2f5d8c',street:'#a1887f',today:'#43a047',batyr:'#c62828',cta:'#ffd166'};
+function floaters(id,t,idx){let h='';for(let i=0;i<7;i++){const sx=((idx*97+i*263)%1000)/1000,sy=((idx*53+i*389)%1000)/1000;const x=40+sx*1000,y=560+sy*700+Math.sin(t*1.3+i)*18,k=eb(P(t,.1+i*.06,.5+i*.06))*(1-exitP(t)),r=(t*40*(i%2?1:-1)+i*30);
+  const c=i%3==0?ACC[id]:'rgba(255,255,255,.9)';const sh=i%3==0?`<div style="width:46px;height:46px;border-radius:50%;border:8px solid ${c}"></div>`:i%3==1?`<div style="width:18px;height:18px;border-radius:50%;background:${c}"></div>`:`<div style="font:700 54px N;color:${c};line-height:1">+</div>`;
+  h+=`<div style="position:absolute;left:${x}px;top:${y}px;opacity:${(.55*k).toFixed(2)};transform:translate(-50%,-50%) rotate(${r}deg) scale(${k.toFixed(3)})">${sh}</div>`}return h}
+function wipe(T){const bs=TL.scenes.map(s=>s.start).slice(1);let h='';const cx=540,cy=1050,R=1450;
+  for(let j=0;j<bs.length;j++){const b=bs[j];if(T<b-.36||T>b+.4)continue;const A=ACC[TL.scenes[j+1].id],Bc='#1e2430';
+    if(T<b){const ra=R*eio(P(T,b-.36,b-.08)),rb=R*eio(P(T,b-.26,b));h+=`<div style="position:absolute;inset:0;background:radial-gradient(circle at ${cx}px ${cy}px,${A} ${ra}px,transparent ${ra+1}px)"></div><div style="position:absolute;inset:0;background:radial-gradient(circle at ${cx}px ${cy}px,${Bc} ${rb}px,transparent ${rb+1}px)"></div>`}
+    else{const rb=R*eio(P(T,b+.02,b+.3)),ra=R*eio(P(T,b+.1,b+.4));h+=`<div style="position:absolute;inset:0;background:radial-gradient(circle at ${cx}px ${cy}px,transparent ${ra}px,${A} ${ra+1}px)"></div><div style="position:absolute;inset:0;background:radial-gradient(circle at ${cx}px ${cy}px,transparent ${rb}px,${Bc} ${rb+1}px)"></div>`}}
+  return h}
 // ---------- 3D narrator ----------
 const av=new THREE.Scene();const avCam=new THREE.PerspectiveCamera(26,1,.1,50);avCam.position.set(0,.15,7.5);avCam.lookAt(0,-.15,0);
 av.add(new THREE.HemisphereLight('#ffffff','#556',1.5));const kl=new THREE.DirectionalLight('#fff',2.2);kl.position.set(2,3,5);av.add(kl);const rl=new THREE.DirectionalLight('#9cf',1.2);rl.position.set(-3,1,-2);av.add(rl);
@@ -292,7 +311,7 @@ function drawAvatar(e,T){const bl=(T%3.3)<.12?.12:1;eyes.forEach(o=>o.scale.y=bl
 // ---------- subtitles ----------
 function words(sub){const out=[];let hl=false;sub.split(/(\*\*)/).forEach(p=>{if(p==='**'){hl=!hl;return}p.split(/(\s+)/).forEach(w=>{if(w)out.push({w,hl,sp:/^\s+$/.test(w)})})});return out}
 function subtitle(sc,lt){const ws=words(sc.sub),tot=ws.filter(x=>!x.sp).reduce((a,x)=>a+x.w.length+2,0);const prog=cl((lt-sc.aStart)/sc.aDur)*tot;let acc=0;
-  return ws.map(x=>{if(x.sp)return ' ';const on=acc<=prog;acc+=x.w.length+2;const c=x.hl?(on?'#ffd166':'rgba(255,209,102,.45)'):(on?'#fff':'rgba(255,255,255,.45)');return `<span style="color:${c}">${x.w}</span>`}).join('')}
+  return ws.map(x=>{if(x.sp)return ' ';const st=acc,on=acc<=prog;acc+=x.w.length+2;const curw=on&&prog<acc&&prog<tot;const c=x.hl?(on?'#ffd166':'rgba(255,209,102,.45)'):(on?'#fff':'rgba(255,255,255,.45)');const k=curw?eb(cl((prog-st)/3)):1;return `<span style="color:${c};border-radius:10px;${curw?'background:rgba(255,209,102,.28);box-shadow:0 0 0 6px rgba(255,209,102,.28)':''}">${x.w}</span>`}).join('')}
 
 // ---------- frame ----------
 let TL=null,cur=null;const v1=new THREE.Vector3(),v2=new THREE.Vector3();
@@ -304,14 +323,16 @@ window.setup=async tl=>{TL=tl;await document.fonts.load('700 100px N');await doc
   for(const k in SC){SC[k].group.clear();SC[k].build(SC[k].group)}return true};
 window.render=T=>{const sc=TL.scenes.find(s=>T>=s.start&&T<s.start+s.dur)||TL.scenes[TL.scenes.length-1];const lt=T-sc.start;const def=SC[sc.id];
   if(cur!==def){if(cur)cur.group.visible=false;def.group.visible=true;applyEnv(def);cur=def}
-  const r=def.update(lt,sc.dur);
+  D_=sc.dur;LAST_=sc===TL.scenes[TL.scenes.length-1];T_=T;ACC_=ACC[sc.id];const r=def.update(lt,sc.dur);
   // camera with entry push
-  const k=eo(P(lt,0,.5));cam.position.set(...r.cam[0]);v1.set(...r.cam[1]);v2.subVectors(cam.position,v1).multiplyScalar(1+(1-k)*.18);cam.position.copy(v1).add(v2);cam.lookAt(v1);cam.fov=45;cam.updateProjectionMatrix();
+  const k=eo(P(lt,0,.9));cam.position.set(...r.cam[0]);v1.set(...r.cam[1]);v2.subVectors(cam.position,v1).multiplyScalar(1+(1-k)*.18);cam.position.copy(v1).add(v2);cam.lookAt(v1);cam.rotateZ(Math.sin(T*.7)*.012);cam.fov=45+(1-k)*6;cam.updateProjectionMatrix();
   const r2=def.update(lt,sc.dur); // second pass so projected labels use final camera
   renderer.setViewport(0,0,W,H);renderer.clear();renderer.render(world,cam);
   const e=TL.env[Math.min(TL.env.length-1,Math.round(T*TL.fps))]||0;drawAvatar(e,T);
   const c=document.getElementById('c');c.style.filter=r.filter||'none';
-  const fade=1-P(lt,0,.18);const ov=document.getElementById('ov');ov.innerHTML=(r2.html||'')+(fade>0&&sc.start>0?`<div style="position:absolute;inset:0;background:#fff;opacity:${(fade*.55).toFixed(3)}"></div>`:'');
+  const ov=document.getElementById('ov');const idx=TL.scenes.indexOf(sc);
+  ov.innerHTML=floaters(sc.id,lt,idx)+(r2.html||'')+`<div style="position:absolute;left:0;top:0;height:10px;width:${(T/TL.total*1080).toFixed(1)}px;background:${ACC_}"></div>`;
+  document.getElementById('wp').innerHTML=wipe(T);
   document.getElementById('sub').innerHTML=subtitle(sc,lt);
 };
 window.READY=true;
