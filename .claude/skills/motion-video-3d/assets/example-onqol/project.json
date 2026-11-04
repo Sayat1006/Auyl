@@ -1,0 +1,13 @@
+{
+ "title": "Оң қол — оқырман пікірі",
+ "tag": "",
+ "voice": {
+  "model": "kk-issai-high",
+  "spk": "0",
+  "speed": 0.95
+ },
+ "music": "pad",
+ "narrator": {
+  "type": "cartoon"
+ }
+}

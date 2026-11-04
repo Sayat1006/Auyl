@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="kk"><head><meta charset="utf-8"><title>motion-video-3d</title>
+<script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script>
+<style>
+@font-face{font-family:N;font-weight:700;src:url(/fonts/noto-sans-cyrillic-700-normal.woff2)}
+@font-face{font-family:N;font-weight:700;src:url(/fonts/noto-sans-cyrillic-ext-700-normal.woff2);unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F}
+@font-face{font-family:N;font-weight:700;src:url(/fonts/noto-sans-latin-700-normal.woff2);unicode-range:U+0000-00FF,U+2000-206F,U+2190-21FF}
+@font-face{font-family:N;font-weight:500;src:url(/fonts/noto-sans-cyrillic-500-normal.woff2)}
+@font-face{font-family:N;font-weight:500;src:url(/fonts/noto-sans-cyrillic-ext-500-normal.woff2);unicode-range:U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F}
+@font-face{font-family:'PT Serif';font-weight:700;src:url(/fonts/pt-serif-cyrillic-700-normal.woff2)}
+html,body{margin:0;background:#000}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:N,sans-serif;background:#000}
+canvas{position:absolute;inset:0;width:1080px;height:1920px}
+#ov,#wp,#avw{position:absolute;inset:0}
+.head{position:absolute;left:0;right:0;top:200px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.hl{font-weight:700;line-height:1.02;letter-spacing:-2px;text-transform:uppercase;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:12px;padding:12px 28px;border-radius:999px;font-weight:700;font-size:40px;white-space:nowrap}
+#sub{position:absolute;left:48px;right:48px;bottom:64px;padding:24px 34px;border-radius:26px;background:rgba(18,18,24,.8);color:#fff;font-size:46px;font-weight:700;line-height:1.3;text-align:center}
+#tag{position:absolute;left:350px;top:1560px;font-weight:700;font-size:34px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+</style></head>
+<body><div id="stage"><canvas id="c" width="1080" height="1920"></canvas><div id="ov"></div><div id="avw"></div><div id="tag"></div><div id="sub"></div><div id="wp"></div></div>
+<script type="module">
+const E=await import('/engine/engine.js');
+const pj=await (await fetch('/project/project.json')).json();
+await import('/project/scenes.js');
+window.setup=async tl=>{await E.setup(tl,pj);return true};
+window.render=T=>E.render(T);
+window.READY=true;
+</script></body></html>
