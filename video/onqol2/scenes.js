@@ -2,14 +2,14 @@
 import * as E from '/engine/engine.js';
 const {THREE,scene,SC,st,head,chipH,chipAt,pop,exitP,SH,P,eo,eio,eb,bounce,cl,rnd,M,B,mesh,box,cyl,sph,G,canvasTex,ctxText,noiseGround,ext,heartShape,starShape,
   house,person,hand,curl,book,imgTex,coverTex,spineTex,pageTex,room,dustPoints,SKIN}=E;
-const REAL=()=>book(imgTex('/project/build/cover.jpg'),spineTex('ТӨЛЕН ӘБДІК · ОҢ ҚОЛ','#3d3d3d'),'#f1ece0',.35,3.2,2.04);
+const REAL=()=>book(imgTex('/project/build/cover.jpg'),spineTex('ТӨЛЕН ӘБДІК · ОҢ ҚОЛ','#3d3d3d'),'#f1ece0',.35,3.2,2.12);
 const ACC={hook:'#ff4d4d',reader:'#ffd166',born:'#ffb74d',works:'#ffd166',prize:'#ffc107',young:'#ff4d4d',alma:'#4fc3f7',night:'#ff4d4d',tied:'#ff7043',love:'#ff5c8a',end:'#ffd166',op1:'#ff4d4d',op2:'#90caf9',op3:'#ffc107',quote:'#ffd166',cta:'#ffb74d'};
 // hand: palm + 4 fingers + thumb, fingers curl with c (0..1)
 scene('hook',{env:{bg:[[0,'#07070c'],[.6,'#1a0b10'],[1,'#3a0f16']],fog:['#1a0b10',8,30],hemi:['#552233','#000000',.5],sun:['#ff3b3b',4,[0,4,-8]]},
   build(g){g.add(mesh(new THREE.PlaneGeometry(60,60).rotateX(-Math.PI/2),M('#140a0d'),0,0,0));this.h=hand(SKIN);g.add(this.h);this.d=dustPoints(250,'#ff8a80');g.add(this.d);
     const fill=new THREE.PointLight('#ffc8b8',40,14);fill.position.set(1.5,2.5,4.5);g.add(fill)},
   update(t){const r=eo(P(t,.1,1.6));this.h.position.set(0,-3.2+r*3.4,0);this.h.rotation.set(-.15,Math.sin(t*.6)*.25,.05);curl(this.h,.15+.65*eio(P(t,1.6,3.2)),t);this.d.position.y=t*.15;
-    return {cam:[[0,1.6,7-t*.4],[0,1.4,0]],html:head(t,[['Өз қолың',110,'#fff',.1],['жау болса?',132,'#ff4d4d',.7]],780)}}});
+    return {cam:[[0,1.6,7-t*.4],[0,1.4,0]],html:head(t,[['Өз қолың',110,'#fff',.1],['жау болса?',132,'#ff4d4d',.7]],830)}}});
 
 scene('reader',{env:{bg:[[0,'#2b1d14'],[1,'#4a3220']],fog:['#2b1d14',14,40],hemi:['#ffe2b8','#2b1d14',.8],sun:['#ffe0b0',2.4,[-5,9,6]],lamp:[2.5,3.2,-.5,40]},
   build(g){g.add(box(16,.4,12,M('#6d4c41',{flatShading:false,roughness:.5}),0,-.2,0));
@@ -32,12 +32,12 @@ scene('born',{env:{bg:[[0,'#3b4b7a'],[.55,'#e7a46b'],[1,'#ffd9a0']],fog:['#f0b98
     const k=eio(P(t,0,5.5));
     return {cam:[[-3+k*3,3.5,11-k*2],[0,2.4,-1]],html:head(t,[[String(Math.round(1900+42*eo(P(t,.1,1.3)))),220,'#fff',0]],170)+chipH(t,1.6,'📍 Қостанай облысы, Жангелді ауданы','#fff','#b23a2a',520,'font-size:40px')+chipH(t,.9,'✍️ Төлен Әбдік','#2b1d14','#ffd166',1250,'font-size:46px')}}});
 
-const WORKS=[['Парасат майданы','#1f3a5f'],['Ақиқат','#5d1f1f'],['Әке','#2f4a2f'],['Өліара','#4a3a1f']];
+const WORKS=[['Парасат майданы','#5b6b78','cover_parasat.jpg',.62],['Ақиқат','#2a8fd0','cover_akikat.jpg',.62],['Әке','#3b4670','cover_ake.jpg',.75],['Өліара','#d9cfb4','cover_oliara.jpg',.64]];
 scene('works',{env:{bg:[[0,'#1d1712'],[1,'#3b2c20']],fog:['#241b14',14,40],hemi:['#ffe7c4','#1d1712',.9],sun:['#ffe7c4',2.2,[4,8,10]]},
   build(g){g.add(box(12,9,.4,M('#4e342e',{flatShading:false}),0,3,-1.2));[0.2,2.6,5.0].forEach(y=>g.add(box(8.4,.18,2,'#6d4c41',0,y,0)));
     this.bk=[];const cols=['#37474f','#6d4c41','#455a64','#3e2723','#4e342e','#263238','#5d4037'];let x=-3.9;
     for(let r=0;r<3;r++){x=-3.9;while(x<3.8){const w=.25+rnd()*.15,h=1.6+rnd()*.5;const b=book(null,null,cols[(rnd()*7)|0],w,h,1.4);b.position.set(x+w/2,[0.2,2.6,5.0][r]+.09+h/2,0);g.add(b);x+=w+.03}}
-    WORKS.forEach(([t,c],i)=>{const b=book(coverTex(t,c),spineTex(t,c),c,.4,2.3,1.6);b.rotation.y=-Math.PI/2;g.add(b);this.bk.push(b)})},
+    WORKS.forEach(([t,c,f,ar],i)=>{const b=book(imgTex('/project/build/'+f),spineTex(t,c),c,.35,2.3,2.3*ar);b.rotation.y=-Math.PI/2;g.add(b);this.bk.push(b)})},
   update(t){this.bk.forEach((b,i)=>{const p=eo(P(t,.3+i*.7,1.0+i*.7));const tx=(i%2?.85:-.85),ty=(i<2?3.75:1.55);b.scale.setScalar(.8);b.position.set(tx,ty+(1-p)*-7,2.2);b.rotation.set(0,Math.PI/2-p*Math.PI,Math.sin(t*1.5+i)*.04*p);b.visible=p>0});
     const k=eio(P(t,0,4.5));
     return {cam:[[0,2.8,11.5-k*.8],[0,2.7,0]],html:head(t,[['Шығармалары',110,'#ffd166',.1]],240)}}});
@@ -52,9 +52,9 @@ scene('prize',{env:{bg:[[0,'#1b1530'],[1,'#3b2a5a']],fog:['#2a2045',14,40],hemi:
   update(t){const p=eb(P(t,.2,.9));this.m.scale.setScalar(Math.max(.001,p));this.m.position.set(0,.5+Math.sin(t*1.8)*.12,0);this.m.rotation.y=Math.sin(t*1.1)*.5+(1-p)*3;
     const mm=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),s=new THREE.Vector3(1,1,1);
     this.cd.forEach(([x,y,z,ph],i)=>{const yy=6-((t*1.4+y)%10);e.set(t*3+ph,t*2+ph,0);q.setFromEuler(e);mm.compose(v.set(x+Math.sin(t+ph)*.4,yy,z),q,s.setScalar(t>.6?1:0));this.conf.setMatrixAt(i,mm)});this.conf.instanceMatrix.needsUpdate=true;
-    return {cam:[[0,1.4,10],[0,1.6,0]],html:head(t,[['Мемлекеттік',104,'#fff',.1],['сыйлық',130,'#ffc107',.45]],210)+chipH(t,.9,'«Парасат майданы» · 2004','#ffc107','#1b1530',560,'font-size:44px')+chipH(t,3.0,'🏅 Қазақстанның халық жазушысы','#fff','#3b2a5a',1240,'font-size:44px')}}});
+    return {cam:[[0,1.4,10],[0,1.6,0]],html:head(t,[['Мемлекеттік',104,'#fff',.1],['сыйлық',130,'#ffc107',.45]],210)+chipH(t,.9,'«Парасат майданы» · 2004','#ffc107','#1b1530',560,'font-size:44px')+chipH(t,3.0,'🏅 Халық жазушысы','#fff','#3b2a5a',1240,'font-size:46px')}}});
 
-scene('young',{env:{bg:[[0,'#120a0c'],[1,'#3a1218']],fog:['#1d0d10',12,40],hemi:['#ffd6d6','#120a0c',.9],sun:['#ffe0d0',2.6,[3,6,8]]},
+scene('young',{env:{bg:[[0,'#120a0c'],[1,'#3a1218']],fog:['#1d0d10',12,40],hemi:['#ffd6d6','#120a0c',.7],sun:['#ffe0d0',1.5,[3,6,8]],bloom:.08,envI:.25},
   build(g){this.b=REAL();g.add(this.b);this.d=dustPoints(200,'#ffab91');g.add(this.d)},
   update(t){const p=eo(P(t,.1,1.3));this.b.position.set(0,1.5+Math.sin(t*1.6)*.1,0);this.b.rotation.set(.08,-Math.PI/2+(1-p)*5+Math.sin(t*.9)*.25,0);this.b.scale.setScalar(Math.max(.001,eb(P(t,.1,.7))));this.d.position.y=-t*.2;
     const n=Math.round(25*eo(P(t,1.2,2.4)));
@@ -92,7 +92,7 @@ scene('love',{env:{bg:[[0,'#2a1424'],[1,'#5a2a44']],fog:['#3a1a30',12,40],hemi:[
     const k=eio(P(t,0,6));
     return {cam:[[0,2.6,11-k*1.2],[0,2.6,0]],html:head(t,[['Дәрігер',110,'#fff',.1],['ғашық болады',100,'#ff5c8a',.5]],220)+chipH(t,3.4,'💉 құтқару керек!','#fff','#5a2a44',1240,'font-size:46px')}}});
 
-scene('end',{env:{bg:[[0,'#0d0d10'],[1,'#26201a']],fog:['#15120f',10,30],hemi:['#ffe6c4','#0d0d10',.7],sun:['#ffe0b0',2.4,[-3,7,5]]},
+scene('end',{env:{bg:[[0,'#0d0d10'],[1,'#26201a']],fog:['#15120f',10,30],hemi:['#ffe6c4','#0d0d10',.6],sun:['#ffe0b0',1.6,[-3,7,5]],bloom:.1,envI:.25},
   build(g){g.add(box(14,.3,10,M('#4e342e',{flatShading:false}),0,-.15,0));this.b=REAL();this.b.rotation.set(0,-Math.PI/2,Math.PI/2);this.b.position.set(0,.2,0);g.add(this.b);
     const qt=canvasTex(256,256,(x,w,h)=>ctxText(x,'?',230,'#ffd166',w/2,h/2+10));this.q=[0,1,2].map(i=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.4),new THREE.MeshBasicMaterial({map:qt,transparent:true}));g.add(m);return m})},
   update(t){this.b.rotation.y=-Math.PI/2+Math.sin(t*.7)*.15;this.q.forEach((m,i)=>{const p=eb(P(t,.4+i*.35,.9+i*.35));m.scale.setScalar(Math.max(.001,p*(i==1?1.3:.8)));m.position.set((i-1)*1.5,1.6+Math.sin(t*2+i)*.15+(i==1?.3:0),0);m.rotation.z=(i-1)*-.25});
@@ -115,7 +115,7 @@ scene('op2',{env:{bg:[[0,'#0b1020'],[1,'#22304f']],fog:['#121a30',12,40],hemi:['
   update(t){const k=eio(P(t,0,4.6));this.a.position.y=Math.sin(t*1.5)*.03;this.b.position.y=this.a.position.y;this.ba.rotation.x=-Math.max(0,Math.sin(t*1.4))*.9;
     return {cam:[[.6-k*.6,2.4,10-k*.8],[0,2.2,0]],html:head(t,[['Ең қауіпті жау',96,'#fff',.1],['— өзің?',140,'#90caf9',2.4]],210)}}});
 
-scene('op3',{env:{bg:[[0,'#2b1d14'],[1,'#4a3220']],fog:['#2b1d14',14,40],hemi:['#ffe2b8','#2b1d14',.9],sun:['#ffe0b0',2.6,[-4,8,6]]},
+scene('op3',{env:{bg:[[0,'#2b1d14'],[1,'#4a3220']],fog:['#2b1d14',14,40],hemi:['#ffe2b8','#2b1d14',.8],sun:['#ffe0b0',1.8,[-4,8,6]],bloom:.12,envI:.3},
   build(g){g.add(box(16,.4,12,M('#6d4c41',{flatShading:false,roughness:.5}),0,-.2,0));this.b=REAL();this.b.rotation.set(0,-Math.PI/2,Math.PI/2);this.b.position.set(0,.2,.5);g.add(this.b);
     this.st=[0,1,2,3,4].map(i=>{const s=ext(starShape(),.25,'#ffc107',{metalness:.5,roughness:.3,emissive:'#ff9800',emissiveIntensity:.25});g.add(s);return s})},
   update(t){this.st.forEach((s,i)=>{const p=eb(P(t,2.9+i*.2,3.3+i*.2));s.scale.setScalar(Math.max(.001,p*.55));s.position.set((i-2)*1.25,2.6+Math.sin(t*2+i)*.1,.5);s.rotation.y=(1-p)*4+Math.sin(t+i)*.2});

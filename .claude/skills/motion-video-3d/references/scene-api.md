@@ -22,7 +22,7 @@ scene('id-from-scenes.json',{
 ## Layout zones (1080×1920 overlay pixels)
 - Headline: top 170–620 (`head(t,lines,top)`), chips under it 520–700.
 - 3D subject: middle 650–1350. Aim the camera so the subject's centre projects ~y 1000.
-- Narrator corner + tag: 1290–1690 left; subtitle box: bottom 64 px margin, ~200 px tall.
+- Narrator corner (head-only sticker, ~440 px): x 0–450, y ~1180–1690; subtitle box: bottom 64 px margin, ~200 px tall. `chipH` with y>1100 auto-aligns right to clear the head.
 - `avatar:"hero"` puts the narrator large at top (y 150–700) → put headlines at top ≥ 760 in that scene.
 
 ## Overlay helpers (return HTML strings; concatenate into `html`)

@@ -32,7 +32,8 @@ export const kin=(s,t,a,step=.032)=>[...s].map((ch,i)=>{const p=P(t,a+i*step,a+i
 export const head=(t,lines,top=200)=>{const last=lines[lines.length-1];const ua=last[3]+.35,u=eo(P(t,ua,ua+.5)),uq=exitP(t);
   return `<div class="head" style="top:${top}px">${lines.map(([s,z,c,a,x=''])=>`<div class="hl" style="font-size:${z}px;color:${c};${SH};${x};overflow:hidden;padding:4px 24px 16px;margin-bottom:-14px">${kin(s,t,a)}</div>`).join('')}
   <div style="height:16px;width:300px;border-radius:8px;background:${st.acc};margin-top:6px;transform-origin:${uq>0?'right':'left'};transform:scaleX(${(u*(1-uq)).toFixed(3)});box-shadow:0 4px 0 rgba(0,0,0,.2)"></div></div>`};
-export const chipH=(t,a,txt,bg,fg,y,extra='')=>{const p=eo(P(t,a,a+.45)),q=exitP(t,.05);if(p<=0)return '';return `<div style="position:absolute;left:0;right:0;top:${y}px;display:flex;justify-content:center;opacity:${1-q}"><div class="chip" style="background:${bg};color:${fg};box-shadow:0 10px 24px rgba(0,0,0,.3);clip-path:inset(-20px ${((1-p)*100).toFixed(1)}% -20px -20px round 999px);transform:translateX(${((1-p)*-40+q*80).toFixed(1)}px);${extra}">${txt}</div></div>`};
+// chips placed in the lower zone (y>1100) move right so they don't sit under the narrator's head (bottom-left)
+export const chipH=(t,a,txt,bg,fg,y,extra='')=>{const p=eo(P(t,a,a+.45)),q=exitP(t,.05);if(p<=0)return '';const low=y>1100&&st.avatar!=='hidden';return `<div style="position:absolute;left:0;right:0;top:${y}px;display:flex;justify-content:${low?'flex-end':'center'};padding-right:${low?40:0}px;opacity:${1-q}"><div class="chip" style="background:${bg};color:${fg};box-shadow:0 10px 24px rgba(0,0,0,.3);clip-path:inset(-20px ${((1-p)*100).toFixed(1)}% -20px -20px round 999px);transform:translateX(${((1-p)*-40+q*80).toFixed(1)}px);${extra}">${txt}</div></div>`};
 export const chipAt=(x,y,txt,bg,fg,style='')=>`<div style="position:absolute;left:${x-200}px;top:${y}px;width:400px;display:flex;justify-content:center"><div class="chip" style="background:${bg};color:${fg};font-size:38px;box-shadow:0 8px 20px rgba(0,0,0,.3);${style}">${txt}</div></div>`;
 // red rubber stamp that slams in (myth-busting «ҚАТЕЛЕСЕСІҢ», dates «1937»)
 export const stamp=(t,a,txt,y=700,color='#e53935',rot=-8,size=110)=>{const p=P(t,a,a+.22);if(p<=0)return '';const s=2.2-1.2*eo(p),q=exitP(t);
@@ -137,7 +138,8 @@ export function coverTex(title,col,sub='',icon=''){return canvasTex(512,720,(x,w
 export function spineTex(title,col){return canvasTex(128,900,(x,w,h)=>{x.fillStyle=col;x.fillRect(0,0,w,h);x.fillStyle='rgba(255,215,140,.8)';x.fillRect(0,40,w,6);x.fillRect(0,h-46,w,6);x.save();x.translate(w/2,h/2);x.rotate(-Math.PI/2);ctxText(x,title,title.length>12?44:56,'#ffe9b0',0,4);x.restore()})}
 // book: cover on +x face, spine on +z. rotation.y=-PI/2 shows the cover to a camera on +z.
 export function book(cover,spine,col,w=.35,h=2.2,d=1.6){const pages=M('#f1e8d0',{flatShading:false});const cm=M(col,{flatShading:false,roughness:.6});
-  return mesh(new THREE.BoxGeometry(w,h,d),[cover?new THREE.MeshStandardMaterial({map:cover,roughness:.6}):cm,cm,pages,pages,spine?new THREE.MeshStandardMaterial({map:spine,roughness:.6}):cm,pages])}
+  const tm=t=>new THREE.MeshStandardMaterial({map:t,roughness:.75,envMapIntensity:.25}); // low env so light covers don't wash out
+  return mesh(new THREE.BoxGeometry(w,h,d),[cover?tm(cover):cm,cm,pages,pages,spine?tm(spine):cm,pages])}
 export function medal(lines=['ҚР','МЕМЛЕКЕТТІК','СЫЙЛЫҒЫ']){const mt=canvasTex(512,512,(x,w,h)=>{const gr=x.createRadialGradient(w/2,h/2,40,w/2,h/2,w/2);gr.addColorStop(0,'#ffe082');gr.addColorStop(1,'#c99a1e');x.fillStyle=gr;x.fillRect(0,0,w,h);x.strokeStyle='#8d6e00';x.lineWidth=14;x.beginPath();x.arc(w/2,h/2,220,0,7);x.stroke();lines.forEach((l,i)=>ctxText(x,l,i?48:90,'#6d4c00',w/2,h/2-70+i*75))});
   const gold=M('#d4a62a',{metalness:.85,roughness:.28,flatShading:false});const g=G();const d=mesh(new THREE.CylinderGeometry(1.6,1.6,.22,64),gold);d.rotation.x=Math.PI/2;g.add(d);const fc=new THREE.Mesh(new THREE.CircleGeometry(1.5,64),new THREE.MeshStandardMaterial({map:mt,metalness:.6,roughness:.35}));fc.position.z=.12;g.add(fc);
   const r1=box(.7,2.4,.05,'#1565c0',-.35,2.4,-.1),r2=box(.7,2.4,.05,'#ffd54f',.35,2.4,-.1);r1.rotation.z=.25;r2.rotation.z=-.25;g.add(r1,r2);return g}
@@ -172,7 +174,7 @@ function photoAvatar(cfg,e,T,mode){const el=document.getElementById('avw');if(mo
   const drop=(e*a.mouth.drop).toFixed(1),bob=(Math.sin(T*2.1)*4-e*4).toFixed(1),rot=(Math.sin(T*.9)*1.5).toFixed(2),mw=a.mouth.w;
   el.innerHTML=`<div style="position:absolute;left:${x}px;top:${y}px;width:${a.w}px;height:${a.h}px;transform-origin:0 0;transform:scale(${s}) translateY(${bob}px) rotate(${rot}deg);filter:drop-shadow(6px 0 0 #fff) drop-shadow(-6px 0 0 #fff) drop-shadow(0 6px 0 #fff) drop-shadow(0 -6px 0 #fff) drop-shadow(0 14px 20px rgba(0,0,0,.45))">
    <img src="${a.image}" style="position:absolute;left:0;top:0;width:${a.w}px;height:${a.h}px">
-   <div style="position:absolute;left:${a.mouth.x-mw/2}px;top:${a.mouth.y-2}px;width:${mw}px;height:${(+drop+5).toFixed(1)}px;border-radius:0 0 ${mw/2}px ${mw/2}px/0 0 ${(+drop/2+3).toFixed(1)}px ${(+drop/2+3).toFixed(1)}px;background:#3a1010"></div>
+   <div style="position:absolute;left:${a.mouth.x-mw/2}px;top:${a.mouth.y-2}px;width:${mw}px;height:${(+drop+6).toFixed(1)}px;border-radius:0 0 ${mw/2}px ${mw/2}px/0 0 ${(+drop/2+3).toFixed(1)}px ${(+drop/2+3).toFixed(1)}px;background:#3a1010"></div>
    <img src="${a.image}" style="position:absolute;left:0;top:${drop}px;width:${a.w}px;height:${a.h}px;clip-path:polygon(${a.jaw.map(([px,py])=>`${px}px ${py}px`).join(',')})"></div>`}
 // cartoon 3D head (fallback when there is no photo)
 const av=new THREE.Scene();const avCam=new THREE.PerspectiveCamera(26,1,.1,50);avCam.position.set(0,.15,7.5);avCam.lookAt(0,-.15,0);
@@ -212,7 +214,7 @@ export async function setup(tl,pj){TL=tl;PJ=pj;await document.fonts.load('700 10
   document.getElementById('tag').textContent=pj.tag||'';const miss=TL.scenes.filter(s=>!SC[s.id]).map(s=>s.id);if(miss.length)throw new Error('scenes.js has no scene for: '+miss.join(', '));return true}
 export function render(T){const sc=TL.scenes.find(s=>T>=s.start&&T<s.start+s.dur)||TL.scenes[TL.scenes.length-1];const lt=T-sc.start;const def=SC[sc.id];
   if(cur!==def){if(cur)cur.group.visible=false;def.group.visible=true;applyEnv(def);cur=def}
-  Object.assign(st,{D:sc.dur,last:sc===TL.scenes[TL.scenes.length-1],T,id:sc.id,acc:def.acc||'#ffd166'});
+  Object.assign(st,{D:sc.dur,last:sc===TL.scenes[TL.scenes.length-1],T,id:sc.id,acc:def.acc||'#ffd166',avatar:sc.avatar||(PJ.narrator?.type==='none'?'hidden':'corner')});
   let r=def.update(lt,sc.dur);
   const k=eo(P(lt,0,.9));cam.position.set(...r.cam[0]);v1.set(...r.cam[1]);v2.subVectors(cam.position,v1).multiplyScalar(1+(1-k)*.18);cam.position.copy(v1).add(v2);cam.lookAt(v1);cam.rotateZ(Math.sin(T*.7)*.012);cam.fov=(r.fov||45)+(1-k)*6;cam.updateProjectionMatrix();
   r=def.update(lt,sc.dur); // second pass: labels projected with the final camera
