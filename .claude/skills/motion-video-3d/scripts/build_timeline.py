@@ -5,7 +5,7 @@ Scene timing = 0.25s lead + speech + 0.45s tail (+ "pad" seconds from scenes.jso
 project.json "music": "pad" (quiet generated chords, default) | "none" (add music later in TikTok/Reels).
 Deliberately NO noise 'whoosh' at transitions: filtered noise sounds like sniffing at every sentence end."""
 import json, wave, os, sys, subprocess, numpy as np
-P=os.path.abspath(sys.argv[1]); FPS=30; SR=22050
+P=os.path.abspath(sys.argv[1]); FPS=30; SR=44100
 pj=json.load(open(f'{P}/project.json')) if os.path.exists(f'{P}/project.json') else {}
 sc=json.load(open(f'{P}/scenes.json')); n=len(sc)
 def rd(f):

@@ -4,7 +4,8 @@
  "voice": {
   "model": "kk-issai-high",
   "spk": "0",
-  "speed": 0.95
+  "speed": 0.95,
+  "note": "ElevenLabs v4: narration Yersultan, quote Nurlan"
  },
  "music": "pad",
  "narrator": {
