@@ -26,7 +26,7 @@ jaw=[(-.55,0),(.55,0),(.52,.16),(.36,.31),(.14,.38),(-.14,.38),(-.36,.31),(-.52,
 cfg=dict(type='photo',image='/project/build/avatar.png',w=crop.width,h=crop.height,mouth=dict(x=round(cx),y=round(cy),w=round(.36*fw),drop=round(.065*fw)),
          jaw=[[round(cx+u*fw),round(cy+v*fw)] for u,v in jaw])
 cfg['scale']=round(330/crop.width,3); cfg['x']=14; cfg['y']=round(1690-crop.height*cfg['scale'])
-cfg['heroScale']=round(560/crop.width,3); cfg['heroY']=150
+cfg['heroScale']=round(540/crop.height,3)  # hero head spans y 150-690; put that scene's headline at top>=760; cfg['heroY']=150
 pjf=f'{P}/project.json'; pj=json.load(open(pjf)) if os.path.exists(pjf) else {}; pj['narrator']=cfg; json.dump(pj,open(pjf,'w'),ensure_ascii=False,indent=1)
 prev=Image.new('RGBA',crop.size,(40,160,90,255)); prev.alpha_composite(crop); d=ImageDraw.Draw(prev); d.polygon(cfg['jaw'],outline=(255,0,0)); prev.convert('RGB').save(f'{P}/build/avatar_check.jpg')
 print('wrote build/avatar.png, build/avatar_check.jpg (red = moving jaw piece; it should cover chin from the lip line down) and project.json narrator')

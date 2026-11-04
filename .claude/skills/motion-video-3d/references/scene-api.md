@@ -39,7 +39,7 @@ scene('id-from-scenes.json',{
 `P(t,a,b)` 0→1 progress, `eo` ease-out, `eio` ease-in-out, `eb` back/overshoot, `bounce`, `cl` clamp.
 
 ## 3D helpers
-Primitives: `M(color,opts)` flat-shaded standard material, `B` basic, `mesh, box, cyl, sph, G(...children)`, `ext(shape,depth,color)`, shapes `heartShape, starShape, rrShape`, `canvasTex(w,h,draw)` + `ctxText`, `textPlane(txt)`, `gradTex`, `noiseGround(w,d,seg,amp,color)`, `dustPoints(n,color)`, `sunDisc(r,color,x,y,z)`, `toScreen(x,y,z)`.
+Primitives: `M(color,opts)` flat-shaded standard material, `B` basic, `mesh, box, cyl, sph, G(...children)`, `ext(shape,depth,color)`, shapes `heartShape, starShape, rrShape`, `canvasTex(w,h,draw)` + `ctxText`, `imgTex('/project/build/file.jpg')` (photo/cover texture; keep user images in the project's build/), `textPlane(txt)`, `gradTex`, `noiseGround(w,d,seg,amp,color)`, `dustPoints(n,color)`, `sunDisc(r,color,x,y,z)`, `toScreen(x,y,z)`.
 
 Models (all low-poly, shadows on):
 `house(wall,roof)`, `yurt()`, `tree()`, `poplar()`, `person(coat)`, `folk(coat,'kalpak'|'saukele'|'plain')`, `worker(color)`, `hand()` + `curl(hand,0..1,t)`, `tractor(color)`, `wheel(r)`+`spinW`, `train(nWagons)`, `book(coverTex,spineTex,color,w,h,d)` (+ `coverTex(title,color,sub,icon)`, `spineTex`, `pageTex`, `docTex(title)`), `medal(lines)`, `mapPin()`, `bubble()`, `room(g,night)` (hospital room with bed+girl).

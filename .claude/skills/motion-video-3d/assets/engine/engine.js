@@ -93,6 +93,9 @@ export const sph=(r,c,x,y,z,seg=20)=>mesh(new THREE.SphereGeometry(r,seg,Math.ma
 export const G=(...ch)=>{const g=new THREE.Group();ch.forEach(c=>c&&g.add(c));return g};
 export function gradTex(stops){const c=document.createElement('canvas');c.width=4;c.height=512;const x=c.getContext('2d');const gr=x.createLinearGradient(0,0,0,512);stops.forEach(([p,col])=>gr.addColorStop(p,col));x.fillStyle=gr;x.fillRect(0,0,4,512);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
 export function canvasTex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');draw(x,w,h);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;t.userData={c,x};return t}
+// image file -> texture (e.g. '/project/build/cover.jpg'); setup() waits until all are loaded
+const PENDING=[];
+export function imgTex(url){let ok;PENDING.push(new Promise(r=>ok=r));const t=new THREE.TextureLoader().load(url,()=>ok(),undefined,()=>{console.error('image failed: '+url);ok()});t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;return t}
 export function ctxText(x,txt,size,col,cx,cy,font=700){x.font=`${font} ${size}px N`;x.fillStyle=col;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,cx,cy)}
 export function noiseGround(w,d,seg,amp,col,fn){const g=new THREE.PlaneGeometry(w,d,seg,seg);g.rotateX(-Math.PI/2);const p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i);p.setY(i,fn?fn(x,z):amp*(Math.sin(x*.35)*Math.cos(z*.3)+.5*Math.sin(x*.9+z*.7)))}g.computeVertexNormals();const m=mesh(g,M(col));m.castShadow=false;return m}
 export const ext=(shape,depth,col,o={})=>mesh(new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:true,bevelThickness:.12,bevelSize:.1,bevelSegments:4,curveSegments:24}),M(col,{flatShading:false,roughness:.4,...o}));
@@ -205,6 +208,7 @@ function applyEnv(def){const e=def.env;world.background=def._bg||(def._bg=gradTe
   world.environmentIntensity=e.envI??.5;bloom.strength=e.bloom??.25;grade.uniforms.uVig.value=e.vig??.35}
 export async function setup(tl,pj){TL=tl;PJ=pj;await document.fonts.load('700 100px N','ҚҰҮҒӘІҢӨҺ');await document.fonts.load('500 100px N');await document.fonts.ready;
   for(const k in SC){SC[k].group.clear();SC[k].build(SC[k].group)} // rebuild canvas textures now that fonts exist
+  await Promise.all(PENDING);
   document.getElementById('tag').textContent=pj.tag||'';const miss=TL.scenes.filter(s=>!SC[s.id]).map(s=>s.id);if(miss.length)throw new Error('scenes.js has no scene for: '+miss.join(', '));return true}
 export function render(T){const sc=TL.scenes.find(s=>T>=s.start&&T<s.start+s.dur)||TL.scenes[TL.scenes.length-1];const lt=T-sc.start;const def=SC[sc.id];
   if(cur!==def){if(cur)cur.group.visible=false;def.group.visible=true;applyEnv(def);cur=def}
