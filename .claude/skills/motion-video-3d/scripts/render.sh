@@ -6,10 +6,15 @@
 set -euo pipefail
 D="$(cd "$1" && pwd)"; N="${2:-4}"; OUT="${3:-$D/build/video.mp4}"; S="$(dirname "$0")"
 TOTAL=$(python3 -c "import json,math;t=json.load(open('$D/build/timeline.json'));print(math.ceil(t['total']*t['fps']))")
-mkdir -p "$D/build/frames"; rm -f "$D"/build/frames/*.tmp.jpg
+MODE=$(python3 -c "import json;print(json.load(open('$D/project.json')).get('mode','3d'))"); EXT=jpg; [ "$MODE" = overlay ] && EXT=png
+mkdir -p "$D/build/frames"; rm -f "$D"/build/frames/*.tmp.*
 for w in $(seq 0 $((N-1))); do node "$S/render.js" "$D" frames $w $N > "$D/build/render_$w.log" 2>&1 & done
-while :; do C=$(ls "$D/build/frames" | grep -c '^[0-9]*\.jpg$' || true); [ "$C" -ge "$TOTAL" ] && break
+while :; do C=$(ls "$D/build/frames" | grep -c "^[0-9]*\.$EXT\$" || true); [ "$C" -ge "$TOTAL" ] && break
   if [ -z "$(jobs -r)" ]; then echo "workers exited early ($C/$TOTAL frames); see build/render_*.log"; grep -h ERROR "$D"/build/render_*.log | head; exit 1; fi; sleep 5; done
 wait
+if [ "$MODE" = overlay ]; then  # composite transparent graphics over the edited footage (build/base_edit.mp4 from edit_talking_head.py)
+ffmpeg -v error -y -i "$D/build/base_edit.mp4" -framerate 30 -i "$D/build/frames/%05d.png" -filter_complex "[0:v][1:v]overlay=0:0:format=auto:shortest=1,format=yuv420p[v]" -map "[v]" -map 0:a -c:v libx264 -preset slow -crf 18 -maxrate 14M -bufsize 28M -profile:v high -c:a aac -b:a 192k -movflags +faststart "$OUT"
+else
 ffmpeg -v error -y -framerate 30 -i "$D/build/frames/%05d.jpg" -i "$D/build/master.wav" -c:v libx264 -preset slow -crf 18 -maxrate 14M -bufsize 28M -profile:v high -pix_fmt yuv420p -c:a aac -b:a 192k -ac 2 -ar 48000 -shortest -movflags +faststart "$OUT"
+fi
 ffprobe -v error -show_entries format=duration,size -of compact "$OUT"; echo "$OUT"

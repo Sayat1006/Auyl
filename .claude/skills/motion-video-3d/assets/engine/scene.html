@@ -20,8 +20,10 @@ canvas{position:absolute;inset:0;width:1080px;height:1920px}
 </style></head>
 <body><div id="stage"><canvas id="c" width="1080" height="1920"></canvas><div id="ov"></div><div id="avw"></div><div id="tag"></div><div id="sub"></div><div id="wp"></div></div>
 <script type="module">
-const E=await import('/engine/engine.js');
 const pj=await (await fetch('/project/project.json')).json();
+window.MV3D_PJ=pj; // engine reads mode ('3d' | 'overlay') at import time
+if(pj.mode==='overlay'){document.documentElement.style.background='transparent';document.body.style.background='transparent';document.getElementById('stage').style.background='transparent'}
+const E=await import('/engine/engine.js');
 await import('/project/scenes.js');
 window.setup=async tl=>{await E.setup(tl,pj);return true};
 window.render=T=>E.render(T);

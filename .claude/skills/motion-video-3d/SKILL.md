@@ -1,6 +1,6 @@
 ---
 name: motion-video-3d
-description: Make vertical 9:16 (TikTok / Instagram Reels / YouTube Shorts) explainer videos in 3D + motion-graphics style with Kazakh voice-over, karaoke subtitles and a talking narrator (from the user's photo or a 3D cartoon head) — researched script, Piper Kazakh TTS, three.js scenes with bloom/grade, kinetic typography, render to MP4. Use this whenever the user asks for a video, reel, рилс, тикток, shorts, видео түсіндірме, motion graphic, «осындай видео жаса», a video review of a book/story («кітапқа пікір видео»), a history/explainer clip, or wants to remake/replicate a reference video — even if they don't say "3D" or "skill". Also use it to fix/iterate an existing project made with it (voice, timing, scenes, sound artifacts).
+description: Make vertical 9:16 (TikTok / Instagram Reels / YouTube Shorts) explainer videos in 3D + motion-graphics style with Kazakh voice-over, karaoke subtitles and a talking narrator (from the user's photo or a 3D cartoon head) — researched script, Piper Kazakh TTS, three.js scenes with bloom/grade, kinetic typography, render to MP4. Use this whenever the user asks for a video, reel, рилс, тикток, shorts, видео түсіндірме, motion graphic, «осындай видео жаса», a video review of a book/story («кітапқа пікір видео»), a history/explainer clip, or wants to remake/replicate a reference video — even if they don't say "3D" or "skill". Also use it to EDIT a user's own talking-head / selfie video (монтаж, видеоталдау, кітапқа пікір, «Кітап оқитын ұлт») — pause tightening, punch-in jump cuts, karaoke captions, motion-graphics overlay, end card — and to fix/iterate an existing project made with it (voice, timing, scenes, sound artifacts).
 ---
 
 # motion-video-3d
@@ -73,6 +73,15 @@ bash $S/qa.sh <proj> video            # contact sheet of the final MP4
 - Output `build/video.mp4`: 1080×1920, 30 fps, H.264 ≤14 Mbps, AAC 192k stereo.
 - Send the MP4 to the user, then give: the full spoken text in one block, sources list, and what you could not verify.
 - Commit the project's `scenes.json`, `scenes.js`, `project.json` (not `build/`) if the user works in a repo.
+
+## Mode B — edit a real talking-head video (montage)
+For "монтаждап бер" with the user's own footage. Graphics are rendered transparent and composited over the footage.
+1. **Transcript with timestamps.** You can't hear audio. Try Whisper (`pip install faster-whisper`, needs huggingface.co + *.hf.co allowed); if blocked, ask the user for CapCut → Captions → Auto captions → Edit captions screenshots (CapCut times are rounded; ±0.5 s is fine). Fix obvious ASR errors (e.g. «в 1-ом доме» → «в первом томе») and tell the user what you changed. Keep subtitles in the spoken language.
+2. `<proj>/captions.json` `[{"id":"c01","t":1.0,"sub":"… **keyword** …"}, …]`, `project.json` `{"mode":"overlay","narrator":{"type":"none"}}`.
+3. `python3 $S/edit_talking_head.py <proj> <raw.mp4>` → upscale/denoise/-14 LUFS, pauses tightened, alternating punch-in zoom, caption times snapped to micro-pauses and mapped through the cuts, 3 s frozen outro (scene id `outro`) → `build/base_edit.mp4` + `build/timeline.json`.
+4. `scenes.js`: one scene per caption id (missing ids are allowed = no graphics). Keep the speaker's face clear: headlines in the top band (y 100–380, a dark top shade is added automatically), chips in the lower band (y 1240–1460). Good devices: campaign badge + title + 3D book in the intro, lower-third name card for people mentioned, keyword chips, strike-through («өмірбаян ғана емес»), end card over a 3D veil plane (HTML veils would cover the 3D layer). See `/home/user/Auyl/video/kitap_ult/scenes.js` style.
+5. Preview on top of the footage: `bash $S/overlay_preview.sh <proj> 1.8 12.5 …` → `build/qa_overlay.jpg`. Then `bash $S/render.sh <proj>` (PNG frames + composite).
+Don't invent facts the speaker didn't say beyond safe, well-known ones (dates, volume count); never invent the speaker's name — ask.
 
 ## Quality bar (why each matters)
 See `references/quality.md` for the checklist and past mistakes. The biggest quality levers, in order: a tight script with a real hook; the user's own voice recording (TTS is OK, a human is better); scene composition that leaves the top 30 % for the headline and bottom 25 % for avatar+subtitles; constant gentle motion (no frozen frames); consistent per-scene accent colour.

@@ -57,7 +57,9 @@ export function linkChips(t,a,left,right,y=700,label=''){const p=eio(P(t,a+.3,a+
 
 // ---------------- three.js core ----------------
 const canvas=document.getElementById('c');
-export const renderer=new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true});
+// mode 'overlay': transparent output (PNG frames) composited over real footage, e.g. a talking-head edit
+export const OVERLAY=(window.MV3D_PJ&&window.MV3D_PJ.mode)==='overlay';
+export const renderer=new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true,alpha:OVERLAY,premultipliedAlpha:false});if(OVERLAY)renderer.setClearColor(0x000000,0);
 renderer.setPixelRatio(1);renderer.setSize(W,H,false);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -205,23 +207,24 @@ function subtitle(sc,lt){const ws=words(sc.sub),tot=ws.filter(x=>!x.sp).reduce((
 
 // ---------------- frame ----------------
 let TL=null,PJ=null,cur=null;const v1=new THREE.Vector3(),v2=new THREE.Vector3();
-function applyEnv(def){const e=def.env;world.background=def._bg||(def._bg=gradTex(e.bg));world.fog=new THREE.Fog(e.fog[0],e.fog[1],e.fog[2]);hemi.color.set(e.hemi[0]);hemi.groundColor.set(e.hemi[1]);hemi.intensity=e.hemi[2];
+function applyEnv(def){const e=def.env||{bg:[[0,'#000'],[1,'#000']],fog:['#000',50,200],hemi:['#fff','#444',1.2],sun:['#fff',2.4,[4,8,8]]};def.env=e;world.background=OVERLAY?null:(def._bg||(def._bg=gradTex(e.bg)));world.fog=OVERLAY?null:new THREE.Fog(e.fog[0],e.fog[1],e.fog[2]);hemi.color.set(e.hemi[0]);hemi.groundColor.set(e.hemi[1]);hemi.intensity=e.hemi[2];
   sun.color.set(e.sun[0]);sun.intensity=e.sun[1];sun.position.set(...e.sun[2]);sun.target.position.set(0,0,0);lamp.intensity=e.lamp?e.lamp[3]:0;if(e.lamp)lamp.position.set(e.lamp[0],e.lamp[1],e.lamp[2]);
   world.environmentIntensity=e.envI??.5;bloom.strength=e.bloom??.25;grade.uniforms.uVig.value=e.vig??.35}
 export async function setup(tl,pj){TL=tl;PJ=pj;await document.fonts.load('700 100px N','ҚҰҮҒӘІҢӨҺ');await document.fonts.load('500 100px N');await document.fonts.ready;
   for(const k in SC){SC[k].group.clear();SC[k].build(SC[k].group)} // rebuild canvas textures now that fonts exist
   await Promise.all(PENDING);
-  document.getElementById('tag').textContent=pj.tag||'';const miss=TL.scenes.filter(s=>!SC[s.id]).map(s=>s.id);if(miss.length)throw new Error('scenes.js has no scene for: '+miss.join(', '));return true}
+  document.getElementById('tag').textContent=pj.tag||'';if(OVERLAY)TL.scenes.forEach(s=>{if(!SC[s.id])scene(s.id,{build(){},update(){return {cam:[[0,0,10],[0,0,0]]}}})}); // overlay: scenes without graphics are fine
+  const miss=TL.scenes.filter(s=>!SC[s.id]).map(s=>s.id);if(miss.length)throw new Error('scenes.js has no scene for: '+miss.join(', '));return true}
 export function render(T){const sc=TL.scenes.find(s=>T>=s.start&&T<s.start+s.dur)||TL.scenes[TL.scenes.length-1];const lt=T-sc.start;const def=SC[sc.id];
   if(cur!==def){if(cur)cur.group.visible=false;def.group.visible=true;applyEnv(def);cur=def}
   Object.assign(st,{D:sc.dur,last:sc===TL.scenes[TL.scenes.length-1],T,id:sc.id,acc:def.acc||'#ffd166',avatar:sc.avatar||(PJ.narrator?.type==='none'?'hidden':'corner')});
   let r=def.update(lt,sc.dur);
   const k=eo(P(lt,0,.9));cam.position.set(...r.cam[0]);v1.set(...r.cam[1]);v2.subVectors(cam.position,v1).multiplyScalar(1+(1-k)*.18);cam.position.copy(v1).add(v2);cam.lookAt(v1);cam.rotateZ(Math.sin(T*.7)*.012);cam.fov=(r.fov||45)+(1-k)*6;cam.updateProjectionMatrix();
   r=def.update(lt,sc.dur); // second pass: labels projected with the final camera
-  grade.uniforms.uTime.value=Math.floor(T*30)%97;renderer.autoClear=true;composer.render();
+  grade.uniforms.uTime.value=Math.floor(T*30)%97;renderer.autoClear=true;if(OVERLAY){renderer.setRenderTarget(null);renderer.clear();renderer.render(world,cam)}else composer.render();
   const mode=sc.avatar||(PJ.narrator?.type==='none'?'hidden':'corner');const e=TL.env[Math.min(TL.env.length-1,Math.round(T*TL.fps))]||0;
   if(PJ.narrator?.type==='photo')photoAvatar(PJ.narrator,e,T,mode);else if(PJ.narrator?.type!=='none')cartoonAvatar(e,T,mode);
   document.getElementById('c').style.filter=r.filter||'none';const idx=TL.scenes.indexOf(sc);
-  document.getElementById('ov').innerHTML=floaters(lt,idx)+(r.html||'')+emojiHTML(sc,lt,mode,PJ.narrator)+`<div style="position:absolute;left:0;top:0;height:10px;width:${(T/TL.total*W).toFixed(1)}px;background:${st.acc}"></div>`;
+  document.getElementById('ov').innerHTML=(OVERLAY?(def.topShade===false?'':'<div style="position:absolute;left:0;right:0;top:0;height:560px;background:linear-gradient(rgba(8,12,28,.62),rgba(8,12,28,.28) 60%,rgba(8,12,28,0))"></div>'):floaters(lt,idx))+(r.html||'')+emojiHTML(sc,lt,mode,PJ.narrator)+`<div style="position:absolute;left:0;top:0;height:10px;width:${(T/TL.total*W).toFixed(1)}px;background:${st.acc}"></div>`;
   document.getElementById('wp').innerHTML=wipe(T,TL,id=>SC[id]?.acc||'#ffd166')+(sc.cut==='soft'&&idx>0&&lt<.3?`<div style="position:absolute;inset:0;background:#000;opacity:${((1-lt/.3)*.65).toFixed(2)}"></div>`:'');
   const sb=document.getElementById('sub');sb.style.display=sc.noSub?'none':'block';sb.innerHTML=subtitle(sc,lt)}

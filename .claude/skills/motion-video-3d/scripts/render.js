@@ -19,11 +19,12 @@ srv.listen(0,'127.0.0.1',async()=>{
   await p.goto(`http://127.0.0.1:${srv.address().port}/`);
   await p.waitForFunction(()=>window.READY===true,null,{timeout:60000}).catch(()=>{console.error('page never became READY',err&&err.message);process.exit(1)});
   await p.evaluate(tl=>setup(tl),tl);const stg=await p.$('#stage');
-  const shot=async(T,file)=>{await p.evaluate(T=>render(T),T);await stg.screenshot({path:file,type:'jpeg',quality:92})};
+  const pj=JSON.parse(fs.readFileSync(path.join(PROJ,'project.json'),'utf8'));const OV=pj.mode==='overlay';
+  const shot=async(T,file)=>{await p.evaluate(T=>render(T),T);if(OV&&file.endsWith('.png'))await stg.screenshot({path:file,type:'png',omitBackground:true});else await stg.screenshot({path:file,type:'jpeg',quality:92})};
   const out=d=>{const o=path.join(PROJ,'build',d);fs.mkdirSync(o,{recursive:true});return o};
-  if(mode==='preview'){const o=out('preview');for(const [i,s] of tl.scenes.entries())await shot(s.start+s.dur*.75,path.join(o,`${String(i).padStart(2,'0')}_${s.id}.jpg`))}
-  else if(mode==='at'){const o=out('at');for(const a of process.argv.slice(4))await shot(+a,path.join(o,`t${a}.jpg`))}
+  if(mode==='preview'){const o=out('preview');for(const [i,s] of tl.scenes.entries())await shot(s.start+s.dur*.75,path.join(o,`${String(i).padStart(2,'0')}_${s.id}${OV?'.png':'.jpg'}`))}
+  else if(mode==='at'){const o=out('at');for(const a of process.argv.slice(4))await shot(+a,path.join(o,`t${a}${OV?'.png':'.jpg'}`))}
   else if(mode==='frames'){const w=+process.argv[4],n=+process.argv[5],N=Math.ceil(tl.total*tl.fps),o=out('frames');
-    for(let f=w;f<N;f+=n){const fn=path.join(o,String(f).padStart(5,'0')+'.jpg');if(fs.existsSync(fn))continue;const tmp=fn+'.tmp.jpg';await shot(f/tl.fps,tmp);fs.renameSync(tmp,fn)}}
+    const ext=OV?'.png':'.jpg';for(let f=w;f<N;f+=n){const fn=path.join(o,String(f).padStart(5,'0')+ext);if(fs.existsSync(fn))continue;const tmp=fn+'.tmp'+ext;await shot(f/tl.fps,tmp);fs.renameSync(tmp,fn)}}
   else{console.error('unknown mode');process.exit(2)}
   await b.close();srv.close();if(err)process.exit(1)});
