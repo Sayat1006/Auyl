@@ -21,6 +21,7 @@
 - Noise-based transition "whoosh" → user: "sounds like sniffing at the end of every sentence". Removed.
 - Waiting with `until ! pgrep -f "render.js frames"` matched the waiting shell itself → hung forever. render.sh counts files.
 - `pkill -f until` killed our own shell. Don't pkill broad patterns.
+- Overlay mode: the 3D "soft cut" dip-to-black flickered the real footage at every caption → disabled in overlay.
 - Per-frame film grain made a 13 s clip 111 MB → grain .018 + `-maxrate 14M`.
 - ASCII `"` inside JSON strings broke scenes.json → use „…“ or «…».
 - ES modules don't load from file:// → render.js serves everything over a local HTTP server.

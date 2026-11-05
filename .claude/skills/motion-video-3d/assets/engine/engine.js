@@ -226,5 +226,5 @@ export function render(T){const sc=TL.scenes.find(s=>T>=s.start&&T<s.start+s.dur
   if(PJ.narrator?.type==='photo')photoAvatar(PJ.narrator,e,T,mode);else if(PJ.narrator?.type!=='none')cartoonAvatar(e,T,mode);
   document.getElementById('c').style.filter=r.filter||'none';const idx=TL.scenes.indexOf(sc);
   document.getElementById('ov').innerHTML=(OVERLAY?(def.topShade===false?'':'<div style="position:absolute;left:0;right:0;top:0;height:560px;background:linear-gradient(rgba(8,12,28,.62),rgba(8,12,28,.28) 60%,rgba(8,12,28,0))"></div>'):floaters(lt,idx))+(r.html||'')+emojiHTML(sc,lt,mode,PJ.narrator)+`<div style="position:absolute;left:0;top:0;height:10px;width:${(T/TL.total*W).toFixed(1)}px;background:${st.acc}"></div>`;
-  document.getElementById('wp').innerHTML=wipe(T,TL,id=>SC[id]?.acc||'#ffd166')+(sc.cut==='soft'&&idx>0&&lt<.3?`<div style="position:absolute;inset:0;background:#000;opacity:${((1-lt/.3)*.65).toFixed(2)}"></div>`:'');
+  document.getElementById('wp').innerHTML=wipe(T,TL,id=>SC[id]?.acc||'#ffd166')+(!OVERLAY&&sc.cut==='soft'&&idx>0&&lt<.3?`<div style="position:absolute;inset:0;background:#000;opacity:${((1-lt/.3)*.65).toFixed(2)}"></div>`:'');
   const sb=document.getElementById('sub');sb.style.display=sc.noSub?'none':'block';sb.innerHTML=subtitle(sc,lt)}
