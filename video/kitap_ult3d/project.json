@@ -1,0 +1,15 @@
+{
+ "title": "Кітап оқитын ұлт — «Абай жолы» (3D)",
+ "tag": "",
+ "mode": "3d",
+ "narrator": {
+  "type": "none"
+ },
+ "speakerVideo": "build/base_edit.mp4",
+ "speakerFace": {
+  "cx": 540,
+  "cy": 850,
+  "w": 720,
+  "h": 900
+ }
+}
