@@ -4,5 +4,6 @@
  "mode": "overlay",
  "narrator": {
   "type": "none"
- }
+ },
+ "topShade": false
 }

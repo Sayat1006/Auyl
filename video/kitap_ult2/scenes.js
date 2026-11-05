@@ -7,7 +7,7 @@ const GOLD='#ffc83d',NAVY='#14213d',GREEN='#2f6b3a',ORANGE='#e8790c';
 const H=(t,lines,top)=>head(t,lines.map(([s,z,c,a])=>[s,z,c==='#fff'?NAVY:(c===GOLD?ORANGE:c),a,'text-shadow:0 4px 0 rgba(20,33,61,.10)']),top);
 const ENV={bg:[[0,'#000'],[1,'#000']],fog:['#000',50,200],hemi:['#ffffff','#445',1.3],sun:['#fff6e0',2.6,[3,5,8]]};
 const chip=(t,a,txt,y=700,bg=NAVY,fg='#fff')=>chipH(t,a,txt,bg,fg,y,'font-size:46px;border:3px solid '+GOLD);
-const S=(id,html,extra={},acc=GOLD)=>scene(id,{acc,env:ENV,topShade:id==='outro',build(g){extra.build&&extra.build.call(this,g)},update(t,D){extra.update&&extra.update.call(this,t,D);return {cam:[[0,0,10],[0,0,0]],html:html(t,D)}}});
+const S=(id,html,extra={},acc=GOLD)=>scene(id,{acc,env:ENV,topShade:id==='outro'?true:undefined,build(g){extra.build&&extra.build.call(this,g)},update(t,D){extra.update&&extra.update.call(this,t,D);return {cam:[[0,0,10],[0,0,0]],html:html(t,D)}}});
 const nestBook=()=>book(coverTex('ҰШҚАН ҰЯ','#2f4a3a','БАУЫРЖАН МОМЫШҰЛЫ','🏡'),spineTex('БАУЫРЖАН МОМЫШҰЛЫ · ҰШҚАН ҰЯ','#2f4a3a'),'#2f4a3a',.45,3.0,2.1);
 const strike=(t,word,a=.4)=>{const p=eio(P(t,a,a+.5)),q=exitP(t);return `<div style="position:absolute;left:0;right:0;top:190px;display:flex;justify-content:center;opacity:${1-q}"><div class="hl" style="position:relative;font-size:70px;color:${NAVY};${pop(t,.05)}">${word}<div style="position:absolute;left:-10px;top:52%;height:13px;width:${(p*105).toFixed(1)}%;background:#ff4d4d;border-radius:7px;transform:rotate(-3deg)"></div></div></div>`};
 const lower=(t,name,sub)=>{const p=eo(P(t,.1,.55)),q=exitP(t);return `<div style="position:absolute;left:60px;top:620px;opacity:${1-q};transform:translateX(${((1-p)*-700+q*-300).toFixed(1)}px)">

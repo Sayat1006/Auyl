@@ -26,11 +26,29 @@ if __name__=='__main__':
     if todo:
         n=a.workers; chunks=[todo[i::n] for i in range(n)]
         with ProcessPoolExecutor(n) as ex: list(ex.map(work,chunks))
+    # clean masks: segmentation sometimes grabs bits of posters/furniture in a few frames. The camera is static and the
+    # speaker barely moves, so build the speaker's typical silhouette (median over sampled frames), dilate it a bit, and
+    # erase anything outside it in every frame -> build/seg/c/
+    import numpy as np
+    from PIL import Image
+    mfiles=sorted(glob.glob(f'{SEG}/m/*.png')); os.makedirs(f'{SEG}/c',exist_ok=True)
+    stack=np.stack([np.array(Image.open(f).convert('L').resize((240,428))) for f in mfiles[::8]])
+    med=(np.median(stack,axis=0)>128)
+    r=int(428*.035); allowed=med.copy()  # ~3.5 % of height: room for head movement, not for nearby clutter
+    for _ in range(r):  # binary dilation by r px (4-neighbourhood)
+        a2=allowed.copy(); a2[1:]|=allowed[:-1]; a2[:-1]|=allowed[1:]; a2[:,1:]|=allowed[:,:-1]; a2[:,:-1]|=allowed[:,1:]; allowed=a2
+    lim=None
+    for f in mfiles:
+        out=f'{SEG}/c/'+os.path.basename(f)
+        if os.path.exists(out): continue
+        im=Image.open(f).convert('L')
+        if lim is None: lim=np.array(Image.fromarray((allowed*255).astype(np.uint8)).resize(im.size,Image.BILINEAR)).astype(np.float32)/255
+        Image.fromarray((np.array(im).astype(np.float32)*lim).astype(np.uint8)).save(out)
     S=a.scale; w=int(1080*S)//2*2; h=int(1920*S)//2*2
     fg=(f"[0:v]fps=30,scale=1080:1920:force_original_aspect_ratio=increase:flags=lanczos,crop=1080:1920,unsharp=5:5:0.6:5:5:0.0,eq=contrast=1.05:saturation=1.08:gamma=1.02,format=rgba[v];"
         f"[1:v]scale=1080:1920:flags=bicubic,tmix=frames=3,format=gray[m];[v][m]alphamerge,scale={w}:{h}:flags=lanczos[p];"
         f"color=c={a.bg}:s=1080x1920:r=30[bg];[bg][p]overlay=({1080-w})/2:{1920-h}:shortest=1,format=yuv420p[o]")
-    subprocess.run(['ffmpeg','-v','error','-y','-i',a.raw,'-framerate','30','-i',f'{SEG}/m/%05d.png','-filter_complex',fg,'-map','[o]','-map','0:a',
+    subprocess.run(['ffmpeg','-v','error','-y','-i',a.raw,'-framerate','30','-i',f'{SEG}/c/%05d.png','-filter_complex',fg,'-map','[o]','-map','0:a',
         '-af','highpass=f=80,afftdn=nr=12:nf=-40,acompressor=threshold=-22dB:ratio=3:attack=5:release=150,loudnorm=I=-14:TP=-1.5:LRA=9','-ar','48000',
         '-c:v','libx264','-preset','medium','-crf','17','-pix_fmt','yuv420p','-c:a','aac','-b:a','192k','-shortest',f'{B}/base.mp4'],check=True)
     print(f'{B}/base.mp4  (speaker scale {S}, bg {a.bg})')
